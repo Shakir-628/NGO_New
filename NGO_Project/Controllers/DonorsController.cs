@@ -43,6 +43,21 @@ namespace NGO_Project.Controllers
             return View(donor);
         }
 
+        // GET: Donors/Invoice/5
+        public ActionResult Invoice(int? id)
+        {
+            if (id == null) return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+
+            var donor = db.Donors
+                .Include(d => d.Donations.Select(dn => dn.DonationItems.Select(di => di.ItemMaster)))
+                .Include(d => d.InventoryItem.ItemMaster)
+                .FirstOrDefault(d => d.DonorId == id);
+
+            if (donor == null) return HttpNotFound();
+
+            return View(donor);
+        }
+
         // GET: Donors/Create
         public ActionResult Create()
         {
@@ -129,7 +144,7 @@ namespace NGO_Project.Controllers
                     }
                 }
 
-                return Json(new { success = true });
+                return Json(new { success = true, donorId = donor.DonorId });
             }
             return Json(new { success = false, message = "Invalid data." });
         }

@@ -1,0 +1,328 @@
+@model NGO_Project.Donor
+
+@{
+    Layout = null; // Clean page for printing
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Donation Invoice - @Model.FullName</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --secondary: #10b981;
+            --dark: #111827;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-500: #6b7280;
+            --gray-800: #1f2937;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+            padding: 40px;
+            background-color: #f8fafc;
+            color: var(--dark);
+        }
+
+        .invoice-container {
+            max-width: 850px;
+            margin: 0 auto;
+            background: white;
+            padding: 50px;
+            border-radius: 20px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .invoice-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 8px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 50px;
+        }
+
+        .logo-section h1 {
+            margin: 0;
+            color: var(--primary);
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: -0.025em;
+        }
+
+        .logo-section p {
+            margin: 5px 0 0 0;
+            color: var(--gray-500);
+            font-size: 14px;
+        }
+
+        .invoice-meta {
+            text-align: right;
+        }
+
+        .invoice-meta h2 {
+            margin: 0;
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--gray-800);
+            text-transform: uppercase;
+        }
+
+        .invoice-meta p {
+            margin: 5px 0 0 0;
+            color: var(--gray-500);
+            font-weight: 500;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 50px;
+        }
+
+        .info-block h3 {
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--gray-500);
+            margin-bottom: 12px;
+            border-bottom: 1px solid var(--gray-200);
+            padding-bottom: 8px;
+        }
+
+        .info-block .name {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 5px;
+        }
+
+        .info-block .details {
+            font-size: 15px;
+            line-height: 1.6;
+            color: var(--gray-800);
+        }
+
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 40px;
+        }
+
+        .items-table th {
+            text-align: left;
+            background-color: var(--gray-100);
+            padding: 15px;
+            font-weight: 600;
+            color: var(--gray-800);
+            border-bottom: 2px solid var(--gray-200);
+        }
+
+        .items-table td {
+            padding: 15px;
+            border-bottom: 1px solid var(--gray-200);
+            color: var(--gray-800);
+        }
+
+        .item-name {
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .total-section {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid var(--gray-100);
+        }
+
+        .total-box {
+            text-align: right;
+            min-width: 200px;
+        }
+
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .total-row.grand-total {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--primary);
+            margin-top: 15px;
+            border-top: 1px solid var(--gray-200);
+            padding-top: 15px;
+        }
+
+        .footer {
+            margin-top: 60px;
+            text-align: center;
+            color: var(--gray-500);
+            font-size: 14px;
+            border-top: 1px solid var(--gray-200);
+            padding-top: 30px;
+        }
+
+        .btn-print {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s;
+            z-index: 100;
+        }
+
+        .btn-print:hover {
+            transform: scale(1.05);
+            background: var(--primary-dark);
+        }
+
+        @@media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            .invoice-container {
+                box-shadow: none;
+                padding: 0;
+                width: 100%;
+                max-width: none;
+            }
+            .btn-print {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="btn-print" onclick="window.print()">
+        <i class="fas fa-print"></i> Print Invoice
+    </button>
+
+    <div class="invoice-container">
+        <div class="header">
+            <div class="logo-section">
+                <h1>GOODWILL NGO</h1>
+                <p>Helping Hands for a Better Future</p>
+                <p>123 Charity Lane, Karachi, Pakistan</p>
+            </div>
+            <div class="invoice-meta">
+                <h2>INVOICE</h2>
+                <p>Date: @(Model.CreatedDate.HasValue ? Model.CreatedDate.Value.ToString("MMM dd, yyyy") : DateTime.Now.ToString("MMM dd, yyyy"))</p>
+                <p>Receipt #: INV-@Model.DonorId.ToString("D5")</p>
+            </div>
+        </div>
+
+        <div class="info-grid">
+            <div class="info-block">
+                <h3>Donor Details</h3>
+                <div class="name">@Model.FullName</div>
+                <div class="details">
+                    Email: @Model.Email<br>
+                    Phone: @Model.PhoneNumber<br>
+                    Status: Verified Contributor
+                </div>
+            </div>
+            <div class="info-block">
+                <h3>Organization Information</h3>
+                <div class="name">Goodwill Contribution System</div>
+                <div class="details">
+                    NTN: 1234567-8<br>
+                    Contact: +92 21 3456789<br>
+                    Website: www.goodwillngo.org
+                </div>
+            </div>
+        </div>
+
+        <table class="items-table">
+            <thead>
+                <tr>
+                    <th>Description</th>
+                    <th>Quantity</th>
+                    <th>Unit</th>
+                    <th style="text-align: right;">Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Donations != null && Model.Donations.Any())
+                {
+                    foreach (var donation in Model.Donations)
+                    {
+                        foreach (var item in donation.DonationItems)
+                        {
+                            <tr>
+                                <td class="item-name">@item.ItemMaster.ItemName</td>
+                                <td>@item.Quantity</td>
+                                <td>@item.Unit</td>
+                                <td style="text-align: right;">@(item.CreationDate.HasValue ? item.CreationDate.Value.ToString("MMM dd, yyyy") : "-")</td>
+                            </tr>
+                        }
+                    }
+                }
+                else if (Model.InventoryItem != null)
+                {
+                    <tr>
+                        <td class="item-name">@Model.InventoryItem.ItemMaster.ItemName</td>
+                        <td>@Model.InventoryItem.Quantity</td>
+                        <td>@Model.InventoryItem.ItemMaster.Unit</td>
+                        <td style="text-align: right;">@(Model.CreatedDate.HasValue ? Model.CreatedDate.Value.ToString("MMM dd, yyyy") : "-")</td>
+                    </tr>
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="4" style="text-align: center; color: var(--gray-500);">No items found for this receipt.</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <div class="total-section">
+            <div class="total-box">
+                <div class="total-row grand-total">
+                    <span>Total Contribution</span>
+                    <span>Verified</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p><strong>Thank you for your generous contribution!</strong></p>
+            <p>This is a computer-generated receipt and does not require a physical signature.</p>
+            <p>&copy; @DateTime.Now.Year Goodwill NGO. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

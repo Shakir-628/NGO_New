@@ -707,6 +707,7 @@
     <Content Include="Views\InventoryItems\_InventoryTableRows.cshtml" />
     <Content Include="Views\Shared\_LayoutDonor.cshtml" />
     <Content Include="Views\Donors\Index.cshtml" />
+    <Content Include="Views\Donors\Invoice.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

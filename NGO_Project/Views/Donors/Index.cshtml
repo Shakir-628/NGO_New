@@ -329,8 +329,11 @@
                                 <button class="btn-action btn-view viewItemsBtn" 
                                         data-id="@donor.DonorId"
                                         data-name="@donor.FullName">
-                                    <i class="fas fa-eye"></i> View
+                                    <i class="fas fa-eye"></i> Details
                                 </button>
+                                <a href="/Donors/Invoice/@donor.DonorId" target="_blank" class="btn-action" style="background: #ecfdf5; color: #059669; text-decoration: none;">
+                                    <i class="fas fa-file-invoice"></i> Invoice
+                                </a>
                             </td>
                         </tr>
                     }
@@ -350,8 +353,11 @@
         <div class="donated-items-list" id="itemsList">
             <!-- Details Table will be injected here -->
         </div>
-        <div style="text-align: right;">
-            <button class="btn-action btn-view" style="width: 100%; justify-content: center;" id="modalCloseBtn">Close Window</button>
+        <div style="display: flex; gap: 10px;">
+            <a href="#" id="modalInvoiceBtn" target="_blank" class="btn-action" style="background: #ecfdf5; color: #059669; text-decoration: none; flex: 1; justify-content: center;">
+                <i class="fas fa-print"></i> Print Invoice
+            </a>
+            <button class="btn-action btn-view" style="flex: 1; justify-content: center;" id="modalCloseBtn">Close Window</button>
         </div>
     </div>
 </div>
@@ -373,6 +379,7 @@
                 var name = $(this).data("name");
 
                 $("#modalDonorName").text(name + "'s Donations");
+                $("#modalInvoiceBtn").attr("href", "/Donors/Invoice/" + donorId);
                 $("#itemsList").html('<div class="empty-state"><i class="fas fa-spinner fa-spin me-2"></i> Loading details...</div>');
                 $("#itemsModal").css("display", "flex");
 

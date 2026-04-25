@@ -807,6 +807,9 @@
                     success: function (res) {
                         if (res.success) {
                             $("#donorModalBg").hide();
+                            // Open the invoice in a new tab
+                            window.open("/Donors/Invoice/" + res.donorId, "_blank");
+                            // Redirect to donors list
                             window.location.href = "/Donors/Index";
                         } else {
                             swal("Error!", res.message || "Unable to save donor info.", "error");
