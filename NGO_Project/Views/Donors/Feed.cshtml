@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Contact NGO for Donation</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #f7f8fa;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 1100px;
+      margin: 32px auto;
+      padding: 0 16px;
+    }
+    .back-btn {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 7px 18px;
+      font-size: 1rem;
+      cursor: pointer;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 18px;
+    }
+    .page-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 24px;
+      display: inline-block;
+      vertical-align: middle;
+      margin-left: 12px;
+    }
+    .request-card {
+      background: #e8f8ea;
+      border: 1.5px solid #d1fadf;
+      border-radius: 10px;
+      padding: 24px 24px 18px 24px;
+      margin-bottom: 28px;
+      position: relative;
+    }
+    .priority {
+      display: inline-block;
+      font-size: 0.95rem;
+      font-weight: 600;
+      border-radius: 8px;
+      padding: 4px 12px;
+      background: #fef9c3;
+      color: #b45309;
+      margin-bottom: 8px;
+    }
+    .category {
+      position: absolute;
+      top: 18px;
+      right: 24px;
+      background: #e0e7ff;
+      color: #3730a3;
+      border-radius: 8px;
+      padding: 4px 12px;
+      font-size: 0.95rem;
+      font-weight: 500;
+    }
+    .request-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin: 8px 0 0 0;
+    }
+    .org-link {
+      color: #2563eb;
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 1.05rem;
+      margin-bottom: 8px;
+      display: inline-block;
+    }
+    .desc {
+      color: #374151;
+      margin: 10px 0 12px 0;
+      font-size: 1.05rem;
+    }
+    .location {
+      color: #6b7280;
+      font-size: 1rem;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .items-needed {
+      font-weight: 600;
+      margin: 10px 0 6px 0;
+      font-size: 1.05rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .item-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 0;
+    }
+    .item-tag {
+      background: #f3f4f6;
+      color: #374151;
+      border-radius: 16px;
+      padding: 5px 14px;
+      font-size: 0.98rem;
+      margin-bottom: 4px;
+    }
+    /* Contact Card */
+    .contact-card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      padding: 28px 28px 18px 28px;
+      margin-bottom: 28px;
+      border: 1.5px solid #e5e7eb;
+    }
+    .contact-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #16a34a;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 2px;
+    }
+    .contact-subtitle {
+      color: #6b7280;
+      font-size: 1.05rem;
+      margin-bottom: 12px;
+    }
+    .contact-desc {
+      color: #374151;
+      margin-bottom: 18px;
+      font-size: 1.05rem;
+    }
+    .contact-row {
+      display: flex;
+      gap: 18px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+    .contact-box {
+      background: #f8fafc;
+      border-radius: 10px;
+      border: 1.5px solid #e5e7eb;
+      padding: 18px 20px;
+      flex: 1 1 220px;
+      min-width: 220px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 8px;
+    }
+    .contact-box.email {
+      border: 1.5px solid #bbf7d0;
+      background: #f0fdf4;
+    }
+    .contact-icon {
+      font-size: 1.5rem;
+      color: #2563eb;
+      margin-right: 4px;
+    }
+    .contact-label {
+      font-weight: 600;
+      font-size: 1.05rem;
+      margin-bottom: 2px;
+    }
+    .contact-value {
+      font-size: 1.05rem;
+      color: #374151;
+    }
+    .call-btn, .email-btn {
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 18px;
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      margin-left: auto;
+      transition: background 0.2s;
+    }
+    .call-btn:hover, .email-btn:hover {
+      background: #1d4ed8;
+    }
+    .contact-details-row {
+      display: flex;
+      gap: 32px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+    .contact-details-col {
+      flex: 1 1 220px;
+      min-width: 220px;
+    }
+    .contact-details-label {
+      font-weight: 600;
+      font-size: 1.05rem;
+      margin-bottom: 2px;
+      color: #374151;
+    }
+    .contact-details-value {
+      font-size: 1.05rem;
+      color: #6b7280;
+    }
+    /* Donation Instructions */
+    .instructions-box {
+      background: #e0e7ff;
+      border-radius: 8px;
+      padding: 16px 18px;
+      color: #374151;
+      font-size: 1.02rem;
+      margin-top: 10px;
+      border: 1.5px solid #c7d2fe;
+    }
+    .instructions-box ul {
+      margin: 0;
+      padding-left: 18px;
+    }
+        .instructions-box li {
+            margin-bottom: 6px;
+        }
+      .container {
+        padding: 0 4px;
+      }
+    
+    </style>
+</head>
+<body>
+    <div class="container">
+        <button class="back-btn">&#8592; Back to Feed</button>
+        <span class="page-title">Contact NGO for Donation</span>
+
+        <!-- Request Card -->
+        <div class="request-card">
+            <span class="priority">MEDIUM PRIORITY</span>
+            <span class="category">Clothing</span>
+            <div class="request-title">Winter Clothing Drive for Children</div>
+            <a class="org-link" href="#">Child Welfare Trust</a>
+            <div class="desc">
+                With winter approaching, we need warm clothing for 150 children in our care. Sweaters, jackets, blankets, and winter shoes are urgently needed.
+            </div>
+            <div class="location">&#128205; Lahore, Punjab</div>
+            <div class="items-needed">
+                <span>&#9881; Items Needed:</span>
+            </div>
+            <div class="item-tags" style="margin-top: 6px;">
+                <span class="item-tag">Winter Jackets (sizes 4-14)</span>
+                <span class="item-tag">Sweaters</span>
+                <span class="item-tag">Warm Blankets</span>
+                <span class="item-tag">Winter Shoes</span>
+                <span class="item-tag">Socks</span>
+                <span class="item-tag">Gloves</span>
+            </div>
+        </div>
+
+        <!-- Contact Card -->
+        <div class="contact-card">
+            <div class="contact-title">&#10084; Contact Child Welfare Trust</div>
+            <div class="contact-subtitle">Reach out directly to coordinate your material donation</div>
+            <div class="contact-desc">
+                GOODWILL CONTRIBUTION AND AID MANAGEMENT SYSTEM has been serving communities for over 15 years, focusing on emergency relief, education, and healthcare initiatives.
+            </div>
+            <div class="contact-row">
+                <div class="contact-box">
+                    <span class="contact-icon">&#128222;</span>
+                    <div>
+                        <div class="contact-label">Phone</div>
+                        <div class="contact-value">+92-300-1234567</div>
+                    </div>
+                    <button class="call-btn">Call Now</button>
+                </div>
+                <div class="contact-box email">
+                    <span class="contact-icon">&#9993;</span>
+                    <div>
+                        <div class="contact-label">Email</div>
+                        <div class="contact-value">contact@goodwillgateway.org</div>
+                    </div>
+                    <button class="email-btn">Send Email</button>
+                </div>
+            </div>
+            <div class="contact-details-row">
+                <div class="contact-details-col">
+                    <div class="contact-details-label">&#128205; Address</div>
+                    <div class="contact-details-value">123 Main Street, Gulberg, Lahore, Punjab</div>
+                </div>
+                <div class="contact-details-col">
+                    <div class="contact-details-label">Working Hours</div>
+                    <div class="contact-details-value">
+                        Monday - Friday: 9:00 AM - 6:00 PM<br>
+                        Saturday: 10:00 AM - 4:00 PM
+                    </div>
+                </div>
+            </div>
+            <div class="instructions-box">
+                <ul>
+                    <li>Contact the NGO using the information above</li>
+                    <li>Mention the specific aid request: <b>"Winter Clothing Drive for Children"</b></li>
+                    <li>Coordinate pickup/drop-off arrangements</li>
+                    <li>Ask about any specific requirements for the items</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

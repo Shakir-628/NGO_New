@@ -1,0 +1,50 @@
+﻿
+@model List<NGO_Project.Donor>
+
+@{
+    Layout = "~/Views/Shared/_LayoutNGO.cshtml";
+}
+
+
+<div class="tab-content">
+    <div style="font-size: 2rem; font-weight: 700; margin-bottom: 18px; color: #111827;">Donor Relationship Management</div>
+    <div style="background: #fff; border-radius: 10px; border: 1.5px solid #e5e7eb; padding: 24px 24px 18px 24px; margin-bottom: 28px;">
+        <div style="font-size: 1.25rem; font-weight: 700; margin-bottom: 4px; color: #111827;">Donor Database</div>
+        <div style="color: #6b7280; font-size: 1.05rem; margin-bottom: 18px;">Manage relationships with your donors</div>
+        <div style="margin-bottom: 18px;">
+            <input type="text" placeholder="Search donors..." style="width:100%; padding:10px 12px; border:1.5px solid #e5e7eb; border-radius:6px; font-size:1rem; background:#f9fafb;" />
+        </div>
+        <div style="overflow-x:auto;">
+            <table style="width:100%; border-collapse:collapse; font-size:1.05rem;">
+                <thead>
+                    <tr style="color:#6b7280; text-align:left; border-bottom:1.5px solid #e5e7eb;">
+                        <th style="padding:10px 8px; font-weight:600;">Name</th>
+                        <th style="padding:10px 8px; font-weight:600;">Contact</th>
+                        @*<th style="padding:10px 8px; font-weight:600;">Type</th>
+                        <th style="padding:10px 8px; font-weight:600;">Total Donations</th>
+                        <th style="padding:10px 8px; font-weight:600;">Last Donation</th>*@
+                        <th style="padding:10px 8px; font-weight:600;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                <tbody>
+                    @foreach (var donor in Model)
+                    {
+                        <tr style="border-bottom:1px solid #f3f4f6;">
+                            <td style="padding:10px 8px; font-weight:600; color:#111827;">@donor.FullName</td>
+                            <td style="padding:10px 8px;">
+                                <span style='color:#6b7280;'>&#9993;</span> @donor.Email<br>
+                                <span style='color:#6b7280;'>&#128222;</span> @donor.PhoneNumber
+                            </td>
+                            <td style="padding:10px 8px;">
+                                <span style="background:#dcfce7; color:#16a34a; border-radius:8px; padding:4px 12px; font-size:0.98rem; font-weight:500;">Individual</span>
+                            </td>
+                            @*<td style="padding:10px 8px;">@donor.DonatedItem</td>*@
+                            <td style="padding:10px 8px;">@donor.CreatedDate?.ToString("yyyy-MM-dd")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

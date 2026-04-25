@@ -1,0 +1,50 @@
+@model IEnumerable<NGO_Project.InventoryItem>
+
+@if (Model != null && Model.Any())
+{
+    foreach (var item in Model)
+    {
+        <tr data-id="@item.Id">
+            <td>@(item.ItemMaster != null && !string.IsNullOrEmpty(item.ItemMaster.ItemName) ? item.ItemMaster.ItemName : "N/A")</td>
+            <td>
+                @{
+                    var cats = ViewData["CategoriesList"] as List<NGO_Project.Category>;
+                    var catName = "N/A";
+                    if (item.ItemMaster != null && item.ItemMaster.CategoryId != null)
+                    {
+                        catName = cats?.FirstOrDefault(c => c.CategoryId == item.ItemMaster.CategoryId)?.CategoryName ?? "N/A";
+                    }
+                }
+                @catName
+            </td>
+            <td>@Html.DisplayFor(modelItem => item.Quantity)</td>
+            <td>@Html.DisplayFor(modelItem => item.ItemMaster.Unit)</td>
+            @{
+                string statusClass = "badge-success";
+                string iconClass = "fa-check-circle";
+                string statusText = "Available";
+
+                if (item.Quantity <= 5 && item.Quantity > 0)
+                {
+                    statusClass = "badge-warning";
+                    iconClass = "fa-exclamation-triangle";
+                    statusText = "Low Stock";
+                }
+                else if (item.Quantity == 0)
+                {
+                    statusClass = "badge-danger";
+                    iconClass = "fa-circle-xmark";
+                    statusText = "Out of Stock";
+                }
+            }
+            <td><span class="badge @statusClass"><i class="fas @iconClass"></i> @statusText</span></td>
+            <td>@Html.DisplayFor(modelItem => item.LastUpdated)</td>
+            <td class="text-nowrap">
+                <button class="btn btn-sm btn-outline-danger deleteInvBtn" title="Delete">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        </tr>
+    }
+}
+

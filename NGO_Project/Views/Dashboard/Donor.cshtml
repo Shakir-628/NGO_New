@@ -1,0 +1,511 @@
+﻿@model IEnumerable<dynamic>
+
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Material Aid Requests</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #f7f8fa;
+            margin: 0;
+            padding: 0;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 24px 32px 0 32px;
+        }
+
+            .header h2 {
+                color: #2563eb;
+                margin: 0;
+                font-size: 1.6rem;
+                display: inline;
+            }
+
+        .donor-portal {
+            background: #e0e7ff;
+            color: #2563eb;
+            border: none;
+            border-radius: 16px;
+            padding: 4px 14px;
+            font-size: 0.9rem;
+            margin-left: 10px;
+            cursor: pointer;
+        }
+
+        .logout-btn {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 8px 18px;
+            font-size: 1rem;
+            cursor: pointer;
+            font-weight: 500;
+            margin-left: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px 16px;
+        }
+
+        .title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .subtitle {
+            color: #6b7280;
+            font-size: 1.1rem;
+            margin-bottom: 24px;
+        }
+
+        .search-bar {
+            display: flex;
+            align-items: center;
+            margin-bottom: 24px;
+            gap: 12px;
+        }
+
+            .search-bar input {
+                flex: 1;
+                padding: 10px 16px;
+                border: 1px solid #d1d5db;
+                border-radius: 8px;
+                font-size: 1rem;
+            }
+
+            .search-bar button {
+                background: #f3f4f6;
+                border: none;
+                border-radius: 8px;
+                padding: 10px 14px;
+                cursor: pointer;
+                font-size: 1.1rem;
+            }
+
+        /* Responsive cards container */
+        .cards {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 24px;
+            justify-content: center;
+            gap: 60px;
+        }
+
+        .card {
+            background: transparent;
+            border-radius: 14px;
+            perspective: 1000px;
+            flex: 1 1 calc(33.333% - 24px); /* 3 cards per row with spacing */
+            max-width: 360px;
+            min-width: 280px;
+            min-height: 420px;
+            box-sizing: border-box;
+            margin-bottom: 24px;
+        }
+
+        @@media (max-width: 992px) {
+            .card {
+                flex: 1 1 calc(50% - 24px); /* 2 per row on tablets */
+            }
+        }
+
+        @@media (max-width: 600px) {
+            .card {
+                flex: 1 1 100%; /* Full width on mobile */
+            }
+        }
+
+        .card-inner {
+            position: relative; /* This is essential for positioning the front and back */
+            width: 100%;
+            height: 100%;
+            transition: transform 0.8s ease;
+            transform-style: preserve-3d;
+        }
+
+        .card.flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .card.flipped .card-front {
+            transform: rotateY(-180deg);
+        }
+
+        .card-front {
+            /* Keep this in the document flow to hold the card's space */
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden; /* This hides the back of the front card during the flip */
+            border-radius: 14px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            padding: 24px 20px 20px 20px;
+            background: #fff;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            transition: transform 0.8s ease, opacity 0.8s ease;
+        }
+
+        .card-back {
+            /* Position the back card absolutely, layering it on top of the front */
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            background: #e0e7ff;
+            transform: rotateY(180deg); /* Start the back card rotated */
+            border-radius: 14px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            padding: 30px;
+            text-align: left;
+            color: #3730a3;
+            display: flex; /* You can keep your existing layout styles */
+            flex-direction: column;
+            justify-content: flex-start;
+        }
+
+            .card-back h3 {
+                font-size: 1.5rem;
+                margin-top: 0;
+                margin-bottom: 8px;
+                color: #1e3a8a;
+            }
+
+            .card-back p {
+                font-size: 1rem;
+                line-height: 1.5;
+                margin-bottom: 20px;
+            }
+
+            .card-back hr {
+                width: 100%;
+                border: 0;
+                border-top: 1px solid #c7d2fe;
+                margin: 20px 0;
+            }
+
+            .card-back h4 {
+                font-size: 1.2rem;
+                color: #1e3a8a;
+                margin: 0 0 12px 0;
+            }
+
+            .card-back .contact-info {
+                margin-bottom: 20px;
+            }
+
+                .card-back .contact-info p {
+                    margin: 0 0 8px 0;
+                    font-size: 1rem;
+                }
+
+        .priority {
+            display: inline-block;
+            font-size: 0.95rem;
+            font-weight: 600;
+            border-radius: 8px;
+            padding: 4px 12px;
+            margin-bottom: 8px;
+        }
+
+            .priority.high {
+                background: #fee2e2;
+                color: #b91c1c;
+            }
+
+            .priority.medium {
+                background: #fef9c3;
+                color: #b45309;
+            }
+
+        .date {
+            float: right;
+            color: #6b7280;
+            font-size: 0.98rem;
+            margin-top: 2px;
+        }
+
+        .card h3 {
+            margin: 8px 0 0 0;
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .org-link {
+            color: #2563eb;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 1.05rem;
+            margin-bottom: 8px;
+            display: inline-block;
+        }
+
+        .desc {
+            color: #374151;
+            margin: 10px 0 12px 0;
+            font-size: 1.05rem;
+        }
+
+        .location {
+            color: #6b7280;
+            font-size: 1rem;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .category {
+            background: #e0e7ff;
+            color: #3730a3;
+            border-radius: 8px;
+            padding: 4px 12px;
+            font-size: 0.95rem;
+            display: inline-block;
+            margin-bottom: 8px;
+        }
+
+        .items-needed {
+            font-weight: 600;
+            margin: 10px 0 6px 0;
+            font-size: 1.05rem;
+        }
+
+        .item-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 18px;
+        }
+
+        .item-tag {
+            background: #f3f4f6;
+            color: #374151;
+            border-radius: 16px;
+            padding: 5px 14px;
+            font-size: 0.98rem;
+            margin-bottom: 4px;
+        }
+
+        .donate-btn, .donate-back-btn {
+            background: #22c55e;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 14px 20px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+        }
+
+        .donate-btn {
+            margin-top: auto;
+        }
+
+        .donate-back-btn {
+            background: #2563eb;
+            margin-top: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div>
+            <h2>Welcome, @(Session["FullName"] ?? "Donor")</h2>
+            <button class="donor-portal">Donor Portal</button>
+        </div>
+
+        <form action="@Url.Action("Logout", "Users")" method="post" style="display:inline;">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="logout-btn">Logout</button>
+        </form>
+    </div>
+
+    <div class="container">
+        <div class="title">Material Aid Requests</div>
+        <div class="subtitle">Help NGOs by donating needed items directly</div>
+        <div class="search-bar">
+            <input type="text" placeholder="Search items needed..." disabled>
+            <button title="Filter" disabled><span>&#128269;</span></button>
+        </div>
+
+        <div class="cards" id="cards-container">
+            @if (Model == null || !Model.Any())
+            {
+                <div style="text-align: center; width: 100%; color: #6b7280; padding: 40px;">
+                    No active aid requests available at the moment. Please check back later!
+                </div>
+            }
+            else
+            {
+                foreach (var item in Model)
+                {
+                    string priorityClass = "";
+                    if (item.AidRequest.UrgencyLevel != null)
+                    {
+                        priorityClass = item.AidRequest.UrgencyLevel.Replace(" ", "").ToLower();
+                    }
+                    <div class="card">
+                        <div class="card-inner">
+                            <div class="card-front">
+                                <span class="priority @priorityClass">@item.AidRequest.UrgencyLevel.ToUpper()</span>
+                                <span class="date">@item.AidRequest.PostDate.ToString("M/d/yyyy")</span>
+                                <h3>@item.AidRequest.RequestTitle</h3>
+                                <a class="org-link" href="#">@(item.User.FirstName + " " + item.User.LastName)</a>
+                                <div class="desc">@item.AidRequest.Description</div>
+                                <div class="location">&#128205; @item.AidRequest.Location</div>
+                                <div class="category">@item.AidRequest.Category.CategoryName</div>
+                                <div class="items-needed">Items Needed:</div>
+                                <div class="item-tags">
+                                    <span class="item-tag">Items not specified</span>
+                                </div>
+                                <button class="donate-btn">&#10084; Donate Items</button>
+                            </div>
+                            <div class="card-back">
+                                <h3>Thank you for your support!</h3>
+                                <p>We’ll guide you through the donation process shortly.</p>
+                                <hr>
+                                <h4>NGO Information</h4>
+                                <div class="contact-info">
+                                    <p><strong>Name:</strong> @item.User.FirstName</p>
+                                    <p><strong>Email:</strong> @item.User.Email</p>
+                                    <p><strong>Phone:</strong> @item.User.PhoneNumber</p>
+                                    <p><strong>Address:</strong> @item.User.Address</p>
+                                    <p><strong>City:</strong> @item.User.City</p>
+                                </div>
+                                <button class="donate-back-btn">Back</button>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+
+        <div id="pagination" style="text-align:center; margin-top:4rem;"></div>
+
+    </div>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const cardsPerPage = 6;
+            const cards = Array.from(document.querySelectorAll("#cards-container .card"));
+            const pagination = document.getElementById("pagination");
+            let currentPage = 1;
+
+            function showPage(page) {
+                currentPage = page;
+                const start = (page - 1) * cardsPerPage;
+                const end = start + cardsPerPage;
+
+                cards.forEach((card, index) => {
+                    card.style.display = (index >= start && index < end) ? "" : "none";
+                });
+
+                renderPagination();
+            }
+
+            function renderPagination() {
+                const totalPages = Math.ceil(cards.length / cardsPerPage);
+                pagination.innerHTML = "";
+                if (totalPages <= 1) return;
+
+                const prev = document.createElement("button");
+                prev.textContent = "Prev";
+                prev.disabled = currentPage === 1;
+                prev.onclick = () => showPage(currentPage - 1);
+                pagination.appendChild(prev);
+
+                for (let i = 1; i <= totalPages; i++) {
+                    const btn = document.createElement("button");
+                    btn.textContent = i;
+                    btn.disabled = i === currentPage;
+                    btn.onclick = () => showPage(i);
+                    pagination.appendChild(btn);
+                }
+
+                const next = document.createElement("button");
+                next.textContent = "Next";
+                next.disabled = currentPage === totalPages;
+                next.onclick = () => showPage(currentPage + 1);
+                pagination.appendChild(next);
+
+                pagination.querySelectorAll("button").forEach(btn => {
+                    btn.style.margin = "0 4px";
+                    btn.style.padding = "6px 12px";
+                    btn.style.border = "1px solid #ccc";
+                    btn.style.borderRadius = "4px";
+                    btn.style.cursor = "pointer";
+                    btn.style.background = "#fff";
+                });
+            }
+
+            function filterCards() {
+                const searchInput = document.querySelector('.search-bar input');
+                const filter = searchInput.value.toLowerCase();
+
+                // Hide all cards first
+                cards.forEach(card => card.style.display = "none");
+
+                // Filter and show matching cards
+                const matchingCards = cards.filter(card => {
+                    const cardFront = card.querySelector(".card-front");
+                    const textContent = cardFront.textContent.toLowerCase();
+                    return textContent.includes(filter);
+                });
+
+                // Display the matching cards
+                matchingCards.forEach(card => card.style.display = "");
+
+                // Correctly handle pagination based on whether search input is empty
+                if (filter.length > 0) {
+                    pagination.style.display = "none";
+                } else {
+                    pagination.style.display = "block";
+                    // Important: Reset to the first page when search is cleared
+                    showPage(1);
+                }
+            }
+
+            document.querySelector('.search-bar input').addEventListener('input', filterCards);
+            document.querySelector('.search-bar input').disabled = false;
+            document.querySelector('.search-bar button').disabled = false;
+
+            document.querySelectorAll(".donate-btn").forEach(btn => {
+                btn.addEventListener("click", function () {
+                    this.closest(".card").classList.add("flipped");
+                });
+            });
+
+            document.querySelectorAll(".donate-back-btn").forEach(btn => {
+                btn.addEventListener("click", function () {
+                    this.closest(".card").classList.remove("flipped");
+                });
+            });
+
+            // Initial page load
+            showPage(1);
+        });
+    </script>
+</body>
+</html>

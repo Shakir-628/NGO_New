@@ -1,0 +1,392 @@
+@model NGO_Project.User
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - GOODWILL CONTRIBUTION AND AID MANAGEMENT SYSTEM</title>
+    <link rel="icon" type="image/png" href="~/assets/img/logo/HelpingHands.png" />
+    
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+    <link href="~/assets/css/select2.min.css" rel="stylesheet" />
+    
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --secondary: #10b981;
+            --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --glass-bg: rgba(255, 255, 255, 0.95);
+            --text-main: #1f2937;
+            --text-muted: #6b7280;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+            padding: 40px 20px;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+
+
+        .register-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            border-radius: 28px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.3);
+            padding: 45px;
+            max-width: 800px;
+            width: 100%;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            margin: 20px 0;
+        }
+
+        .header-section {
+            text-align: center;
+            margin-bottom: 35px;
+        }
+
+        .logo-wrapper {
+            background: white;
+            width: 90px;
+            height: 90px;
+            border-radius: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            border: 2px solid #f3f4f6;
+        }
+
+        .logo-wrapper img {
+            max-width: 80%;
+            height: auto;
+        }
+
+        .header-section h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 5px;
+        }
+
+        .header-section p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .form-control, .form-select {
+            height: 50px;
+            background: #f9fafb;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 10px 15px;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus, .form-select:focus {
+            background: white;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+            outline: none;
+        }
+
+        .input-group-text {
+            background: #f3f4f6;
+            border: 2px solid #e5e7eb;
+            border-radius: 0 12px 12px 0;
+            color: var(--text-muted);
+        }
+
+        .register-button {
+            width: 100%;
+            height: 54px;
+            background: linear-gradient(135deg, var(--secondary) 0%, #059669 100%);
+            color: white;
+            border: none;
+            border-radius: 14px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.3);
+        }
+
+        .register-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 20px -5px rgba(16, 185, 129, 0.4);
+            filter: brightness(1.05);
+        }
+
+        .login-link {
+            text-align: center;
+            margin-top: 25px;
+            font-size: 0.95rem;
+            color: var(--text-muted);
+        }
+
+        .login-link a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        .text-danger {
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin: 20px 0 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: #e5e7eb;
+        }
+
+        .is-invalid {
+            border-color: #ef4444 !important;
+            background-image: none !important;
+        }
+
+        /* Select2 Custom Styling */
+        .select2-container--default .select2-selection--single {
+            height: 50px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            background: #f9fafb;
+            display: flex;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="register-card animate__animated animate__fadeIn">
+        <div class="header-section">
+            <div class="logo-wrapper animate__animated animate__zoomIn">
+                <img src="~/assets/img/logo/HelpingHands.jpg" alt="Logo" />
+            </div>
+            <h1 style="font-size: 1.6rem;">GOODWILL CONTRIBUTION AND AID MANAGEMENT SYSTEM</h1>
+            <p>Join our mission to bridge the gap between community needs and donor contributions.</p>
+        </div>
+
+        @using (Html.BeginForm("Registration", "Users", FormMethod.Post, new { id = "registrationForm" }))
+        {
+            @Html.AntiForgeryToken()
+
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <label class="form-label">Account Type</label>
+                    @Html.DropDownListFor(m => m.Type, (IEnumerable<SelectListItem>)ViewBag.UserTypelist, "Select Account Type", new { @class = "form-select searchable", required = "required", id = "Type" })
+                    @Html.ValidationMessageFor(m => m.Type, "", new { @class = "text-danger" })
+                </div>
+
+                <div class="col-md-6 mb-4" id="titleField">
+                    <label class="form-label">Title</label>
+                    @Html.DropDownListFor(m => m.Title,
+                        new SelectList(new List<string> { "Mr.", "Miss", "Mrs.", "Dr." }),
+                        "-- Select Title --",
+                        new { @class = "form-select" })
+                </div>
+            </div>
+
+            <div class="section-title"><i class="fas fa-user-circle"></i> Personal Information</div>
+            
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <label id="firstNameLabel" class="form-label">Full Name</label>
+                    @Html.TextBoxFor(m => m.FirstName, new { @class = "form-control alphabetsonly", required = "required", maxlength = "100", minlength = "3", placeholder = "First name" })
+                    @Html.ValidationMessageFor(m => m.FirstName, "", new { @class = "text-danger" })
+                </div>
+
+                <div class="col-md-6 mb-4" id="lastNameGroup">
+                    <label id="labelNameLabel" class="form-label">Last Name</label>
+                    @Html.TextBoxFor(m => m.LastName, new { @class = "form-control alphabetsonly", maxlength = "100", minlength = "3", placeholder = "Last name" })
+                    @Html.ValidationMessageFor(m => m.LastName, "", new { @class = "text-danger" })
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-4" id="userNameField">
+                    <label class="form-label">Username</label>
+                    @Html.TextBoxFor(m => m.Username, new { @class = "form-control", required = "required", maxlength = "20", minlength = "5", placeholder = "Choose a unique username" })
+                    @Html.ValidationMessageFor(m => m.Username, "", new { @class = "text-danger" })
+                </div>
+
+                <div class="col-md-6 mb-4">
+                    <label class="form-label">Email Address</label>
+                    @Html.TextBoxFor(m => m.Email, new { @class = "form-control", type = "email", required = "required", placeholder = "email@example.com" })
+                    @Html.ValidationMessageFor(m => m.Email, "", new { @class = "text-danger" })
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <label class="form-label">Password</label>
+                    <div class="input-group">
+                        @Html.PasswordFor(m => m.Password, new { @class = "form-control", id = "registerPassword", placeholder = "••••••••", required = "required", maxlength = "20", minlength = "8", autocomplete = "off" })
+                        <span class="input-group-text" id="toggleRegisterPassword" style="cursor:pointer;">
+                            <i id="registerEyeIcon" class="fa fa-eye"></i>
+                        </span>
+                    </div>
+                    <small id="passwordStrength" class="form-text mt-1 d-block" style="font-size: 0.75rem;"></small>
+                    @Html.ValidationMessageFor(m => m.Password, "", new { @class = "text-danger" })
+                </div>
+
+                <div class="col-md-6 mb-4">
+                    <label class="form-label">Phone Number</label>
+                    @Html.TextBoxFor(m => m.PhoneNumber, new { @class = "form-control mobile", required = "required", maxlength = "15", minlength = "10", placeholder = "Primary contact number" })
+                    @Html.ValidationMessageFor(m => m.PhoneNumber, "", new { @class = "text-danger" })
+                </div>
+            </div>
+
+            <div class="section-title"><i class="fas fa-id-card"></i> Identification & Location</div>
+
+            <div class="row">
+                <div class="col-md-4 mb-4">
+                    <label id="cnicLabel" class="form-label">CNIC / Registration</label>
+                    @Html.TextBoxFor(m => m.CNIC, new { @class = "form-control", required = "required", maxlength = "15", placeholder = "e.g. 35202-1234567-1", id = "CNIC" })
+                    @Html.ValidationMessageFor(m => m.CNIC, "", new { @class = "text-danger" })
+                </div>
+
+                <div class="col-md-4 mb-4">
+                    <label class="form-label">City</label>
+                    @Html.TextBoxFor(m => m.City, new { @class = "form-control alphabetsonly", maxlength = "100", placeholder = "e.g. Lahore", required = "required" })
+                    @Html.ValidationMessageFor(m => m.City, "", new { @class = "text-danger" })
+                </div>
+
+                <div class="col-md-4 mb-4">
+                    <label class="form-label">Address</label>
+                    @Html.TextBoxFor(m => m.Address, new { @class = "form-control", required = "required", placeholder = "Street, Area, Building" })
+                    @Html.ValidationMessageFor(m => m.Address, "", new { @class = "text-danger" })
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <button type="submit" class="register-button">Create Account</button>
+            </div>
+        }
+
+        <div class="login-link">
+            Already have an account? <a href="@Url.Action("Login", "Users")">Sign In Here</a>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.inputmask/5.0.8/jquery.inputmask.min.js"></script>
+    <script src="~/assets/js/select2.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            // Input restrictions
+            $('.alphabetsonly').on('input', function () {
+                this.value = this.value.replace(/[^a-zA-Z\s]/g, '');
+            });
+
+            // Initialize Select2
+            if ($.fn.select2) {
+                $('.searchable').select2({
+                    width: '100%',
+                    minimumResultsForSearch: Infinity
+                });
+            }
+
+            const $typeSelect = $('#Type');
+            const $cnicInput = $('#CNIC');
+            const $cnicLabel = $('#cnicLabel');
+            const $firstNameLabel = $('#firstNameLabel');
+            const $lastNameGroup = $('#lastNameGroup');
+
+            function toggleFieldsByAccountType() {
+                const selectedType = $typeSelect.val();
+                const selectedText = $typeSelect.find('option:selected').text().trim().toLowerCase();
+                
+                if (selectedType === "3" || selectedText === "ngo") { // NGO
+                    $('#titleField').fadeOut();
+                    $lastNameGroup.fadeOut();
+                    $firstNameLabel.text("Organization Name");
+                    $('[name="FirstName"]').attr("placeholder", "e.g. Relief Foundation");
+                    $cnicLabel.text("NTN / Reg No");
+                    $cnicInput.attr("placeholder", "Registration Number");
+                    $cnicInput.inputmask('remove');
+                } else { // Donor or others
+                    $('#titleField').fadeIn();
+                    $lastNameGroup.fadeIn();
+                    $firstNameLabel.text("First Name");
+                    $('[name="FirstName"]').attr("placeholder", "e.g. John");
+                    $cnicLabel.text("CNIC");
+                    $cnicInput.attr("placeholder", "35202-1234567-1");
+                    $cnicInput.inputmask("99999-9999999-9");
+                }
+            }
+
+            $typeSelect.change(toggleFieldsByAccountType).trigger('change');
+
+            // Password toggle
+            $("#toggleRegisterPassword").on('click', function () {
+                const input = $("#registerPassword");
+                const icon = $("#registerEyeIcon");
+                const type = input.attr("type") === "password" ? "text" : "password";
+                input.attr("type", type);
+                icon.toggleClass("fa-eye fa-eye-slash");
+            });
+
+            // Password strength check
+            $('#registerPassword').on('input', function () {
+                const val = $(this).val();
+                const strengthText = $('#passwordStrength');
+                if (val.length < 8) {
+                    strengthText.text('Too short (min 8 keys)').css('color', '#ef4444');
+                } else if (!/\d/.test(val) || !/[A-Za-z]/.test(val)) {
+                    strengthText.text('Medium: suggest adding numbers').css('color', '#f59e0b');
+                } else {
+                    strengthText.text('Strong password').css('color', '#10b981');
+                }
+            });
+
+            // Focus states for labels
+            $(".form-control").focus(function() {
+                $(this).closest(".mb-4").find("label").css("color", "var(--primary)");
+            }).blur(function() {
+                $(this).closest(".mb-4").find("label").css("color", "var(--text-main)");
+            });
+        });
+    </script>
+</body>
+</html>

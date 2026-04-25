@@ -1,0 +1,103 @@
+﻿@model IEnumerable<NGO_Project.RequestedItem>
+
+@{
+    Layout = "~/Views/Shared/_LayoutNGO.cshtml";
+}
+
+<!-- Tab Contents -->
+<div class="tab-content">
+    <!-- Dashboard Cards -->
+    <div class="dashboard-cards">
+        <div class="dashboard-card">
+            <div class="card-title">Active Requests <span class="card-icon">&#9432;</span></div>
+            <div class="card-value">12</div>
+            <div class="card-sub">+2 from last week</div>
+        </div>
+        <div class="dashboard-card">
+            <div class="card-title">Inventory Items <span class="card-icon">&#9432;</span></div>
+            <div class="card-value">247</div>
+            <div class="card-sub">85% in stock</div>
+        </div>
+        <div class="dashboard-card">
+            <div class="card-title">Active Donors <span class="card-icon">&#128101;</span></div>
+            <div class="card-value">156</div>
+            <div class="card-sub">+12 this month</div>
+        </div>
+        <div class="dashboard-card refused">
+            <div class="card-title">Refused Requests <span class="card-icon">&#9888;</span></div>
+            <div class="card-value">3</div>
+            <div class="card-sub">Need attention</div>
+        </div>
+    </div>
+
+    <!-- Frequently Refused Requests -->
+    <div class="refused-requests-box">
+        <div class="refused-title">&#9888; Frequently Refused Requests</div>
+        <div class="refused-desc">Items refused 5+ times – consider posting to public feed</div>
+        <div class="refused-list">
+            @if (!Model.Any())
+            {
+                <div style="color: #6b7280; text-align: center; padding: 20px;">
+                    No active aid requests found. Post a new request to get started!
+                </div>
+            }
+            else
+            {
+                foreach (var item in Model)
+                {
+                    <div class="refused-item">
+                        <div>
+                            <div class="refused-item-title">@Html.DisplayFor(modelItem => item.ItemName)</div>
+                            <div class="refused-item-desc">Refused 7 times in last month</div>
+                        </div>
+                        <button class="post-btn" data-id="@item.RequestedItemId">Post to Feed</button>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Scripts -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+$(document).on("click", ".post-btn", function () {
+    var id = $(this).data("id");
+
+    Swal.fire({
+        title: 'Post to Feed?',
+        text: 'Do you want to post this request to the feed?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Yes',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#28a745', // Green for Yes
+        cancelButtonColor: '#6c757d'  // Gray for Cancel
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: '@Url.Action("UpdateIsPosted", "RequestedItems")',
+                type: "POST",
+                data: { id: id },
+                success: function (response) {
+                    if (response.success) {
+                        Swal.fire({
+                            title: 'Posted!',
+                            text: response.message,
+                            icon: 'success',
+                            confirmButtonColor: '#28a745'
+                        }).then(() => location.reload());
+                    } else {
+                        Swal.fire('Error!', response.message, 'error');
+                    }
+                },
+                error: function () {
+                    Swal.fire('Oops!', 'Something went wrong. Try again.', 'error');
+                }
+            });
+        }
+    });
+});
+</script>

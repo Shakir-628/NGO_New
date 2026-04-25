@@ -1,0 +1,52 @@
+﻿@model IEnumerable<NGO_Project.Donation>
+
+@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Index</h2>
+
+<p>
+    @Html.ActionLink("Create New", "Create")
+</p>
+<table class="table">
+    <tr>
+        <th>Donation Date</th>
+        <th>Notes</th>
+        <th>Status</th>
+        <th>Donor Name</th>
+        <th>User First Name</th>
+        <th>Approved By</th>
+        <th>Action</th>
+    </tr>
+
+@foreach (var item in Model) {
+    <tr>
+        <td>
+            @Html.DisplayFor(modelItem => item.DonationDate)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.Notes)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.Status)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.Donor.FullName)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.User.FirstName)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.User1.FirstName)
+        </td>
+        <td>
+            @Html.ActionLink("Edit", "Edit", new { id=item.DonationId }) |
+            @Html.ActionLink("Details", "Details", new { id=item.DonationId }) |
+            @Html.ActionLink("Delete", "Delete", new { id=item.DonationId })
+        </td>
+    </tr>
+}
+
+</table>

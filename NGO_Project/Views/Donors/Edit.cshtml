@@ -1,0 +1,66 @@
+@model NGO_Project.Donor
+
+@{
+    ViewBag.Title = "Edit";
+    Layout = "~/Views/Shared/_LayoutNGO.cshtml";
+}
+
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow border-0" style="border-radius: 15px;">
+                <div class="card-header bg-success text-white py-3" style="border-radius: 15px 15px 0 0;">
+                    <h4 class="mb-0"><i class="fas fa-edit me-2"></i>Edit Donor Information</h4>
+                </div>
+                <div class="card-body p-4">
+                    @using (Html.BeginForm())
+                    {
+                        @Html.AntiForgeryToken()
+                        
+                        <div class="form-horizontal">
+                            @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+                            @Html.HiddenFor(model => model.DonorId)
+                            @Html.HiddenFor(model => model.NGOId)
+                            @Html.HiddenFor(model => model.CreatedDate)
+
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Full Name</label>
+                                    @Html.EditorFor(model => model.FullName, new { htmlAttributes = new { @class = "form-control" } })
+                                    @Html.ValidationMessageFor(model => model.FullName, "", new { @class = "text-danger" })
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Email Address</label>
+                                    @Html.EditorFor(model => model.Email, new { htmlAttributes = new { @class = "form-control" } })
+                                    @Html.ValidationMessageFor(model => model.Email, "", new { @class = "text-danger" })
+                                </div>
+                            </div>
+
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Phone Number</label>
+                                    @Html.EditorFor(model => model.PhoneNumber, new { htmlAttributes = new { @class = "form-control" } })
+                                    @Html.ValidationMessageFor(model => model.PhoneNumber, "", new { @class = "text-danger" })
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Assigned Item</label>
+                                    @Html.DropDownList("InventoryItemId", null, "--- Select Assigned Item ---", htmlAttributes: new { @class = "form-control" })
+                                    @Html.ValidationMessageFor(model => model.InventoryItemId, "", new { @class = "text-danger" })
+                                </div>
+                            </div>
+
+                            <hr class="my-4">
+
+                            <div class="d-flex justify-content-between align-items-center">
+                                @Html.ActionLink("Cancel", "Index", null, new { @class = "text-decoration-none text-secondary" })
+                                <div>
+                                    <button type="submit" class="btn btn-success px-5">Save Changes</button>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

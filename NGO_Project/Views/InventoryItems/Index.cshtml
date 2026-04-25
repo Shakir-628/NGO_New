@@ -1,0 +1,1031 @@
+@model NGO_Project.InventoryDashboardViewModel
+
+@{
+    Layout = "~/Views/Shared/_LayoutNGO.cshtml";
+}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<!-- jQuery (already included, keep your version 3.6.0) -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- DataTables JS (must come AFTER jQuery) -->
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+<style>
+    :root {
+        --primary: #4f46e5;
+        --primary-dark: #4338ca;
+        --secondary: #10b981;
+        --accent: #f59e0b;
+        --info: #3b82f6;
+        --danger: #ef4444;
+        --dark: #111827;
+        --light: #f9fafb;
+        --white: #ffffff;
+        --bg-grad: linear-gradient(135deg, #f0f4ff 0%, #e8f0fe 100%);
+        --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+        --glass-bg: rgba(255, 255, 255, 0.85);
+        --border-radius: 16px;
+    }
+
+    body {
+        font-family: 'Outfit', sans-serif;
+        background: var(--bg-grad) !important;
+        color: var(--dark);
+    }
+
+    .tab-content {
+        animation: fadeIn 0.8s ease-out;
+    }
+
+    /* Header & Action Buttons */
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .page-info h1 {
+        font-size: 2.25rem;
+        font-weight: 700;
+        margin: 0;
+        background: linear-gradient(90deg, var(--primary), var(--info));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        letter-spacing: -0.025em;
+    }
+
+    .page-info p {
+        color: #6b7280;
+        margin: 0.25rem 0 0 0;
+        font-size: 1rem;
+    }
+
+    .btn-theme {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.5rem;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn-primary-theme {
+        background: var(--primary);
+        color: white;
+    }
+
+    .btn-primary-theme:hover {
+        background: var(--primary-dark);
+        transform: translateY(-2px);
+        box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.3);
+    }
+
+    .btn-secondary-theme {
+        background: var(--white);
+        color: var(--dark);
+        border: 1px solid #e5e7eb;
+    }
+
+    .btn-secondary-theme:hover {
+        background: #f3f4f6;
+        transform: translateY(-2px);
+    }
+
+    /* Summary Cards */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2.5rem;
+    }
+
+    .stat-card {
+        background: var(--white);
+        padding: 1.5rem;
+        border-radius: var(--border-radius);
+        box-shadow: var(--card-shadow);
+        position: relative;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        transition: transform 0.3s ease;
+    }
+
+    .stat-card:hover {
+        transform: scale(1.02);
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 100px;
+        height: 100px;
+        background: linear-gradient(135deg, transparent, rgba(79, 70, 229, 0.05));
+        border-radius: 0 0 0 100%;
+    }
+
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .total-icon { background: #eef2ff; color: var(--primary); }
+    .avail-icon { background: #ecfdf5; color: var(--secondary); }
+    .low-icon { background: #fffbeb; color: var(--accent); }
+
+    .stat-label {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #6b7280;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .stat-value {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--dark);
+        line-height: 1;
+        margin-top: 0.5rem;
+    }
+
+    /* Form & Section styling */
+    .content-section {
+        background: var(--glass-bg);
+        backdrop-filter: blur(12px);
+        border-radius: var(--border-radius);
+        padding: 2.5rem;
+        box-shadow: var(--card-shadow);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        margin-bottom: 2rem;
+    }
+
+    .section-title {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+        color: var(--dark);
+    }
+
+    .form-fields-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .form-group label {
+        display: block;
+        font-weight: 600;
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+        color: #374151;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        font-family: inherit;
+        font-size: 1rem;
+        transition: all 0.2s;
+        box-sizing: border-box;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+    }
+
+    /* Table & DataTables Styling */
+    .table-responsive {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid #f1f5f9;
+        margin-top: 1rem;
+    }
+
+    .inventory-table {
+        border-collapse: separate !important;
+        border-spacing: 0 !important;
+    }
+
+    .inventory-table thead th {
+        background: #f8fafc !important;
+        border-bottom: 2px solid #e2e8f0 !important;
+        padding: 1.25rem 1.5rem !important;
+        font-weight: 600 !important;
+        color: #64748b !important;
+        text-transform: uppercase !important;
+        font-size: 0.75rem !important;
+        letter-spacing: 0.05em !important;
+    }
+
+    .inventory-table tbody td {
+        padding: 1.25rem 1.5rem !important;
+        border-bottom: 1px solid #f1f5f9 !important;
+        font-size: 0.95rem !important;
+        color: #334155 !important;
+    }
+
+    .dataTables_wrapper .dataTables_filter input {
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 8px !important;
+        padding: 0.5rem 1rem !important;
+        margin-left: 0.5rem !important;
+    }
+
+    .badge {
+        padding: 0.35rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .badge-success { background: #ecfdf5; color: #059669; }
+    .badge-warning { background: #fffbeb; color: #d97706; }
+    .badge-danger { background: #fef2f2; color: #dc2626; }
+
+    /* Modal Styling */
+    .modal-bg {
+        position: fixed;
+        inset: 0;
+        background: rgba(17, 24, 39, 0.7);
+        backdrop-filter: blur(8px);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 2000;
+        padding: 1.5rem;
+    }
+
+    .modal-content {
+        background: var(--white);
+        border-radius: 20px;
+        width: 100%;
+        max-width: 600px;
+        padding: 2.5rem;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        position: relative;
+    }
+
+    .modal-content h2 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    /* Animations */
+    @@keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+
+<div class="tab-content animate__animated animate__fadeIn">
+    <!-- Page Header -->
+    <div class="page-header mt-4">
+        <div class="page-info">
+            <h1><i class="fas fa-boxes-stacked me-2"></i>Inventory Management</h1>
+            <p>Track, manage, and coordinate your donation inventory efficiently.</p>
+        </div>
+        <div class="header-actions">
+            <button id="showAddItemFormBtn" class="btn-theme btn-primary-theme">
+                <i class="fas fa-plus-circle"></i> Add New Stock
+            </button>
+            <button id="openItemMasterModalBtn" class="btn-theme btn-secondary-theme">
+                <i class="fas fa-cube"></i> Manage Items
+            </button>
+            <button id="openFeedModalBtn" class="btn-theme btn-secondary-theme">
+                <i class="fas fa-folder-plus"></i> Categories
+            </button>
+        </div>
+    </div>
+
+    <!-- Quick Stats Summary -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon total-icon">
+                <i class="fas fa-layer-group"></i>
+            </div>
+            <div class="stat-label">Total Inventory Items</div>
+            <div id="totalItems" class="stat-value">@Model.InventoryItems.Count()</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon avail-icon">
+                <i class="fas fa-check-double"></i>
+            </div>
+            <div class="stat-label">Available Items</div>
+            <div id="availableItems" class="stat-value">@Model.InventoryItems.Count(i => i.Quantity > 5)</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon low-icon">
+                <i class="fas fa-triangle-exclamation"></i>
+            </div>
+            <div class="stat-label">Low Stock Warning</div>
+            <div id="lowStockItems" class="stat-value">@Model.InventoryItems.Count(i => i.Quantity <= 5 && i.Quantity > 0)</div>
+        </div>
+    </div>
+
+    <!-- Add Item Form (Initially Hidden) -->
+    <div id="addItemFormContainer" class="content-section animate__animated animate__fadeInDown" style="display: none;">
+        <h2 class="section-title text-primary"><i class="fas fa-cart-plus"></i> Add New Inventory Item</h2>
+        <p class="text-secondary mb-4">Record new donations received from donors or community contributors.</p>
+
+        <form id="addItemForm">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="NewItem.Id" id="inventoryItemId" value="0" />
+            <div class="form-fields-grid">
+                <div class="form-group">
+                    <label>Item <span class="text-danger">*</span></label>
+                    @Html.DropDownListFor(m => m.NewItem.ItemId, (SelectList)ViewBag.ItemMasters,
+                                           "-- Select Item --",
+                                           new { @id = "itemid", @class = "form-control searchable", @required = "required" })
+                    @Html.ValidationMessageFor(m => m.NewItem.ItemId, "", new { @class = "text-danger" })
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-list me-1 text-primary"></i> Category</label>
+                    <input type="text" id="displayCategory" class="form-control" readonly="readonly" style="background-color: #f3f4f6;" placeholder="Auto-filled" />
+                </div>
+                <div class="form-group">
+                    <label for="Unit"><i class="fas fa-scale-balanced me-1 text-primary"></i> Unit</label>
+                    <input type="text" id="Unit" name="UnitDisplay" class="form-control" readonly="readonly" style="background-color: #f3f4f6;" />
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-calculator me-1 text-primary"></i> Quantity</label>
+                    @Html.TextBoxFor(m => m.NewItem.Quantity, new { @class = "form-control numbersOnly", placeholder = "Quantity", type = "number", min = "1" })
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-calendar-days me-1 text-primary"></i> Expiry Date</label>
+                    @Html.TextBoxFor(m => m.NewItem.ExpirationDate, "{0:yyyy-MM-dd}", new { @type = "date", @class = "form-control" })
+                </div>
+            </div>
+            <br />
+            <div class="mt-4 pt-3 border-top d-flex gap-3">
+                <button type="submit" id="saveInventoryItemBtn" class="btn-theme btn-primary-theme">
+                    <i class="fas fa-save me-1"></i> Save Item to Inventory
+                </button>
+                <button type="button" id="cancelAddItemFormBtn" class="btn-theme btn-secondary-theme">
+                    Cancel
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Current Inventory Table -->
+    <div class="content-section">
+        <h2 class="section-title"><i class="fas fa-boxes-packing"></i> Stock Overview</h2>
+        <p class="text-secondary mb-3">Live tracking of all available items in the central warehouse.</p>
+
+        <div class="table-container pt-2">
+            <table id="mainInventoryTable" class="inventory-table stripe hover w-100">
+                <thead>
+                    <tr>
+                        <th>Item Name</th>
+                        <th>Category</th>
+                        <th>Quantity</th>
+                        <th>Unit</th>
+                        <th>Status</th>
+                        <th>Last Updated</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="inventoryTableBody">
+                    @Html.Partial("_InventoryTableRows", Model.InventoryItems)
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modals (Modernized Styles) -->
+    <div class="modal-bg" id="feedModalBg">
+        <div class="modal-content animate__animated animate__zoomIn">
+            <h2><i class="fas fa-shapes me-2 text-primary"></i>Inventory Categories</h2>
+            
+            @using (Html.BeginForm("CreateCategory", "InventoryItems", FormMethod.Post, new { id = "createCategoryForm" }))
+            {
+                @Html.AntiForgeryToken()
+                <div class="form-fields-grid" style="grid-template-columns: 1fr 1fr;">
+                    <div class="form-group">
+                        <label>Category Label</label>
+                        @Html.TextBox("CategoryName", null, new { @class = "form-control", @placeholder = "e.g. Healthcare" })
+                        <span class="text-danger" id="errorMessage"></span>
+                    </div>
+                    <div class="form-group">
+                        <label>Base Unit</label>
+                        @Html.DropDownList("Unit", new SelectList(new[]
+                        {
+                            new { Value = "ctn", Text = "Carton (ctn)" },
+                            new { Value = "pcs", Text = "Pieces (pcs)" },
+                            new { Value = "kg", Text = "KG" },
+                            new { Value = "ltr", Text = "Litre (ltr)" }
+                        }, "Value", "Text"), "-- Select --", new { @class = "form-control", @id = "UnitSelect" })
+                    </div>
+                </div>
+                <div class="mt-4 d-flex gap-3">
+                    <button type="submit" class="btn-theme btn-primary-theme w-100">Add Category</button>
+                    <button type="button" class="btn-theme btn-secondary-theme w-100" id="cancelFeedModalBtn">Close</button>
+                </div>
+            }
+
+            <div class="mt-5 pt-4 border-top">
+                <h3 class="mb-3 fs-5 fw-bold">Active Categories</h3>
+                <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
+                    <table class="inventory-table w-100">
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th>Unit</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="categoriesTableBody">
+                            @if (ViewBag.CategoriesList != null)
+                            {
+                                foreach (var cat in ViewBag.CategoriesList as List<NGO_Project.Category>)
+                                {
+                                    <tr data-id="@cat.CategoryId">
+                                        <td class="cat-name fw-bold">@cat.CategoryName</td>
+                                        <td class="cat-unit">@cat.Unit</td>
+                                        <td>
+                                            <div class="d-flex gap-2">
+                                                <button class="btn btn-sm btn-outline-primary editCategoryBtn"><i class="fas fa-edit"></i></button>
+                                                <button class="btn btn-sm btn-outline-danger deleteCategoryBtn"><i class="fas fa-trash"></i></button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Category Modal -->
+    <div class="modal-bg" id="editCategoryModal">
+        <div class="modal-content animate__animated animate__zoomIn">
+            <h2><i class="fas fa-edit me-2 text-primary"></i>Update Category</h2>
+            <form id="editCategoryForm">
+                <input type="hidden" id="editCategoryId" name="id" />
+                <div class="form-group mb-3">
+                    <label>Category Label</label>
+                    <input type="text" id="editCategoryName" name="categoryName" class="form-control" required />
+                </div>
+                <div class="form-group mb-3">
+                    <label>Base Unit</label>
+                    <input type="text" id="editCategoryUnit" name="unit" class="form-control" required />
+                </div>
+                <div class="mt-4 d-flex gap-3">
+                    <button type="submit" class="btn-theme btn-primary-theme w-100">Save Changes</button>
+                    <button type="button" class="btn-theme btn-secondary-theme w-100" id="cancelEditCategoryBtn">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Item Master Modal -->
+    <div class="modal-bg" id="itemMasterModalBg">
+        <div class="modal-content animate__animated animate__zoomIn">
+            <h2><i class="fas fa-cube me-2 text-primary"></i>Manage Item Master</h2>
+            
+            @using (Html.BeginForm("CreateItemMaster", "InventoryItems", FormMethod.Post, new { id = "createItemMasterForm" }))
+            {
+                @Html.AntiForgeryToken()
+                <div class="form-fields-grid" style="grid-template-columns: 1fr 1fr;">
+                    <div class="form-group">
+                        <label>Item Name <span class="text-danger">*</span></label>
+                        @Html.TextBox("ItemName", null, new { @class = "form-control", @placeholder = "e.g. Paracetamol", @required = "required" })
+                    </div>
+                    <div class="form-group">
+                        <label>Category <span class="text-danger">*</span></label>
+                        @Html.DropDownList("CategoryId", (SelectList)ViewBag.Categories, "-- Select Category --", new { @class = "form-control", @id = "itemMasterCategoryId", @required = "required" })
+                    </div>
+                    <div class="form-group mt-3">
+                        <label>Base Unit <span class="text-danger">*</span></label>
+                        @Html.DropDownList("Unit", new SelectList(new[]
+                        {
+                            new { Value = "ctn", Text = "Carton (ctn)" },
+                            new { Value = "pcs", Text = "Pieces (pcs)" },
+                            new { Value = "kg", Text = "KG" },
+                            new { Value = "ltr", Text = "Litre (ltr)" }
+                        }, "Value", "Text"), "-- Select Unit --", new { @class = "form-control", @id = "itemMasterUnit", @required = "required" })
+                    </div>
+                </div>
+                <div class="mt-4 d-flex gap-3">
+                    <button type="submit" class="btn-theme btn-primary-theme w-100">Add Item</button>
+                    <button type="button" class="btn-theme btn-secondary-theme w-100" id="cancelItemMasterModalBtn">Close</button>
+                </div>
+            }
+
+            <div class="mt-5 pt-4 border-top">
+                <h3 class="mb-3 fs-5 fw-bold">Defined Items</h3>
+                <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
+                    <table class="inventory-table w-100">
+                        <thead>
+                            <tr>
+                                <th>Item Name</th>
+                                <th>Category</th>
+                                <th>Unit</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="itemMasterTableBody">
+                            @if (ViewBag.ItemMastersList != null)
+                            {
+                                var categories = (List<NGO_Project.Category>)ViewBag.CategoriesList;
+                                foreach (var item in ViewBag.ItemMastersList as List<NGO_Project.ItemMaster>)
+                                {
+                                    <tr data-id="@item.Id">
+                                        <td class="fw-bold">@item.ItemName</td>
+                                        <td>@(item.CategoryId != null && categories != null ? categories.FirstOrDefault(c => c.CategoryId == item.CategoryId)?.CategoryName : "N/A")</td>
+                                        <td>@item.Unit</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-danger deleteItemBtn"><i class="fas fa-trash"></i></button>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Donor / Invoice Modal -->
+    <div class="modal-bg" id="donorModalBg">
+        <div class="modal-content animate__animated animate__bounceIn">
+            <h2 class="text-success"><i class="fas fa-file-invoice me-2"></i>Invoice Details</h2>
+            <p class="mb-4">Complete the donor information to generate the official donation receipt.</p>
+            <form id="donorForm">
+                <input type="hidden" id="DonorId" name="DonorId" value="0" />
+                <input type="hidden" id="NGOId" name="NGOId" value="@Session["UserId"]" />
+                <input type="hidden" id="InventoryItemId" name="InventoryItemId" />
+                <input type="hidden" id="DonatedCategory" name="DonatedCategory" />
+
+                <div class="form-group mb-3">
+                    <label><i class="fas fa-user me-1"></i> Donor Full Name</label>
+                    <input type="text" id="FullName" name="FullName" class="form-control" required placeholder="John Doe" />
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6 form-group">
+                        <label><i class="fas fa-envelope me-1"></i> Email</label>
+                        <input type="email" id="Email" name="Email" class="form-control" placeholder="john@example.com" />
+                    </div>
+                    <div class="col-md-6 form-group">
+                        <label><i class="fas fa-phone me-1"></i> Phone</label>
+                        <input type="text" id="PhoneNumber" name="PhoneNumber" class="form-control" required placeholder="+92-..." />
+                    </div>
+                </div>
+                <div class="form-group mb-4">
+                    <label>Linked Donated Item</label>
+                    <input type="text" id="DonatedItem" name="DonatedItem" class="form-control" readonly style="background-color: #f1f5f9; font-weight: 600;" />
+                </div>
+
+                <div class="d-flex gap-3">
+                    <button type="submit" class="btn-theme btn-primary-theme w-100"><i class="fas fa-print me-1"></i> Finish & Print Invoice</button>
+                    <button type="button" class="btn-theme btn-secondary-theme w-100" id="cancelDonorModalBtn">Discard</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+
+    <script>
+        var inventoryTable;
+
+        $(document).ready(function () {
+            // --- Modal Openers (Top Priority) ---
+            $(document).on("click", "#openItemMasterModalBtn", function () {
+                $("#itemMasterModalBg").css("display", "flex");
+            });
+
+            $(document).on("click", "#openFeedModalBtn", function () {
+                $("#feedModalBg").css("display", "flex");
+            });
+
+            $(document).on("click", "#cancelItemMasterModalBtn", function () {
+                $("#itemMasterModalBg").hide();
+            });
+
+            $(document).on("click", "#cancelFeedModalBtn", function () {
+                $("#feedModalBg").hide();
+            });
+
+            // ✅ Initialize DataTable with error safety
+            try {
+                if ($("#mainInventoryTable").length > 0) {
+                    inventoryTable = $("#mainInventoryTable").DataTable({
+                        pageLength: 10,
+                        lengthMenu: [10, 20, 50],
+                        searching: true,
+                        ordering: true,
+                        responsive: true
+                    });
+                }
+            } catch (err) {
+                console.error("DataTables Initialization Error:", err);
+            }
+
+            // --- Add Item Form toggle ---
+            $("#showAddItemFormBtn").on("click", function () {
+                $("#inventoryItemId").val("0");
+                $("#addItemFormContainer h2.section-title").html('<i class="fas fa-cart-plus"></i> Add New Inventory Item');
+                $("#saveInventoryItemBtn").html('<i class="fas fa-save me-1"></i> Save Item to Inventory');
+                $("#addItemFormContainer").show();
+            });
+
+            $("#cancelAddItemFormBtn").on("click", function () {
+                $("#addItemFormContainer").hide();
+                $("#addItemForm")[0].reset();
+                $("#inventoryItemId").val("0");
+                $("#displayCategory").val("");
+            });
+
+            // --- Add Item Submit ---
+            $("#addItemForm").submit(function (e) {
+                e.preventDefault();
+
+                var form = $(this);
+
+                $.ajax({
+                    url: "/InventoryItems/Create",
+                    type: "POST",
+                    data: form.serialize(),
+                    success: function (response) {
+                        if (response.success) {
+                            var isEdit = $("#inventoryItemId").val() > 0;
+                            $("#addItemFormContainer").hide();
+                            form[0].reset();
+                            $("#inventoryItemId").val("0");
+                            $("#displayCategory").val("");
+
+                            // Step 1: Success message
+                            swal(isEdit ? "Item Updated Successfully!" : "Item Added Successfully!", "", "success").then(() => {
+                                if (!isEdit) {
+                                    // Step 2: Ask for next action only if it was an Add (not edit)
+                                    swal({
+                                        title: "Next Step",
+                                        text: "Would you like to print invoice or mark as anonymous donation?",
+                                        icon: "info",
+                                        buttons: {
+                                            cancel: { text: "Cancel", value: "cancel", visible: false },
+                                            anonymous: { text: "Anonymous Donation", value: "anonymous", className: "btn-warning" },
+                                            invoice: { text: "Print Invoice", value: "invoice", className: "btn-success" }
+                                        }
+                                    }).then((value) => {
+                                        if (value === "invoice") {
+                                            $("#InventoryItemId").val(response.itemId);
+                                            $("#DonatedCategory").val(response.categoryName);
+                                            $("#DonatedItem").val(response.categoryName);
+                                            $("#donorModalBg").show();
+                                        } else if (value === "anonymous") {
+                                            swal("Marked as Anonymous Donation", "", "info");
+                                        }
+                                    });
+                                }
+                            });
+
+                            // Refresh inventory table
+                            $.get("/InventoryItems/GetInventoryItems", function (data) {
+                                $("#inventoryTableBody").html(data);
+
+                                if ($.fn.DataTable.isDataTable("#mainInventoryTable")) {
+                                    inventoryTable.destroy();
+                                }
+                                inventoryTable = $("#mainInventoryTable").DataTable({
+                                    pageLength: 10,
+                                    lengthMenu: [10, 20, 50],
+                                    searching: true,
+                                    ordering: true,
+                                    responsive: true
+                                });
+                            });
+
+                            // Refresh summary
+                            $.get("/InventoryItems/GetSummaryData", function (data) {
+                                $("#totalItems").text(data.total);
+                                $("#availableItems").text(data.available);
+                                $("#lowStockItems").text(data.lowStock);
+                            });
+
+                        } else {
+                            swal("Error!", response.errors || "An error occurred.", "error");
+                        }
+                    },
+                    error: function () {
+                        swal("Error!", "Something went wrong.", "error");
+                    }
+                });
+            });
+
+            // --- Category Modal Form ---
+            $("#createCategoryForm").submit(function (e) {
+                e.preventDefault();
+
+                $.ajax({
+                    url: $(this).attr("action"),
+                    type: "POST",
+                    data: $(this).serialize(),
+                    success: function (response) {
+                        if (response.success) {
+                            swal("Success!", response.message, "success");
+                            $("#CategoryName").val("");
+                            $("#UnitSelect").val("");
+                            $("#feedModalBg").hide();
+                        } else {
+                            $("#errorMessage").text(response.message);
+                        }
+                    },
+                    error: function () {
+                        $("#errorMessage").text("Something went wrong. Please try again.");
+                    }
+                });
+            });
+
+            // --- Donor Form ---
+            // Auto-fill existing donor details by email to support multiple contributions
+            $("#Email").on("blur", function () {
+                var email = $(this).val();
+                if (email.length > 5) {
+                    $.getJSON("/Donors/CheckExistingDonor", { email: email }, function (res) {
+                        if (res.exists) {
+                            $("#FullName").val(res.fullName);
+                            $("#PhoneNumber").val(res.phoneNumber);
+                            swal("Returning Donor!", "We've matched this email and filled in the details.", "info");
+                        }
+                    });
+                }
+            });
+
+            $("#donorForm").submit(function (e) {
+                e.preventDefault();
+
+                $.ajax({
+                    url: "/Donors/SaveDonor",
+                    type: "POST",
+                    data: $(this).serialize(),
+                    success: function (res) {
+                        if (res.success) {
+                            $("#donorModalBg").hide();
+                            window.location.href = "/Donors/Index";
+                        } else {
+                            swal("Error!", res.message || "Unable to save donor info.", "error");
+                        }
+                    },
+                    error: function () {
+                        swal("Error!", "Something went wrong.", "error");
+                    }
+                });
+            });
+
+            // --- Delete Item Master ---
+            $(document).on("click", ".deleteItemBtn", function () {
+                var row = $(this).closest("tr");
+                var id = row.data("id");
+
+                swal({
+                    title: "Are you sure?",
+                    text: "Once deleted, you will not be able to recover this item!",
+                    icon: "warning",
+                    buttons: true,
+                    dangerMode: true,
+                }).then((willDelete) => {
+                    if (willDelete) {
+                        $.ajax({
+                            url: "@Url.Action("DeleteItemMaster", "InventoryItems")",
+                            type: "POST",
+                            data: { id: id },
+                            success: function (res) {
+                                if (res.success) {
+                                    row.fadeOut(300, function() { $(this).remove(); });
+                                    swal("Deleted!", res.message, "success");
+                                } else {
+                                    swal("Error!", res.message, "error");
+                                }
+                            },
+                            error: function () {
+                                swal("Error!", "Failed to process request.", "error");
+                            }
+                        });
+                    }
+                });
+            });
+
+            // --- Auto-fill Category and Unit from Item Selection ---
+            $("#itemid").change(function () {
+                var itemId = $(this).val();
+                if (itemId) {
+                    $.ajax({
+                        url: '@Url.Action("GetItemDetails", "InventoryItems")',
+                        type: "GET",
+                        data: { itemId: itemId },
+                        success: function (data) {
+                            if (data) {
+                                $("#displayCategory").val(data.CategoryName);
+                                $("#Unit").val(data.UnitName);
+                            } else {
+                                $("#displayCategory").val("");
+                                $("#Unit").val("");
+                            }
+                        }
+                    });
+                } else {
+                    $("#displayCategory").val("");
+                    $("#Unit").val("");
+                }
+            });
+
+            $("#createItemMasterForm").submit(function (e) {
+                e.preventDefault();
+                $.ajax({
+                    url: $(this).attr("action"),
+                    type: "POST",
+                    data: $(this).serialize(),
+                    success: function (res) {
+                        if (res.success) {
+                            swal("Success!", res.message, "success").then(() => location.reload());
+                        } else {
+                            swal("Error!", res.message, "error");
+                        }
+                    }
+                });
+            });
+
+            // --- Edit Category ---
+            $(document).on("click", ".editCategoryBtn", function () {
+                var row = $(this).closest("tr");
+                var id = row.data("id");
+                var name = row.find(".cat-name").text();
+                var unit = row.find(".cat-unit").text();
+
+                $("#editCategoryId").val(id);
+                $("#editCategoryName").val(name);
+                $("#editCategoryUnit").val(unit);
+
+                $("#editCategoryModal").show();
+            });
+
+            $("#cancelEditCategoryBtn").click(function () {
+                $("#editCategoryModal").hide();
+            });
+
+            $("#editCategoryForm").submit(function (e) {
+                e.preventDefault();
+
+                $.ajax({
+                    url: "/InventoryItems/EditCategory",
+                    type: "POST",
+                    data: $(this).serialize(),
+                    success: function (res) {
+                        if (res.success) {
+                            swal("Success!", "Category updated successfully!", "success")
+                                .then(() => location.reload());
+                        } else {
+                            swal("Error!", res.message, "error");
+                        }
+                    }
+                });
+            });
+
+            // --- Delete Category ---
+            $(document).on("click", ".deleteCategoryBtn", function () {
+                var row = $(this).closest("tr");
+                var id = row.data("id");
+
+                swal({
+                    title: "Are you sure?",
+                    text: "This will permanently delete the category.",
+                    icon: "warning",
+                    buttons: true,
+                    dangerMode: true,
+                }).then((willDelete) => {
+                    if (willDelete) {
+                        $.ajax({
+                            url: "/InventoryItems/DeleteCategory",
+                            type: "POST",
+                            data: { id: id },
+                            success: function (res) {
+                                if (res.success) {
+                                    swal("Deleted!", "Category has been deleted.", "success")
+                                        .then(() => row.remove());
+                                } else {
+                                    swal("Error!", res.message, "error");
+                                }
+                            }
+                        });
+                    }
+                });
+            });
+
+
+
+            // --- Delete Main Inventory Item ---
+            $(document).on("click", ".deleteInvBtn", function () {
+                var row = $(this).closest("tr");
+                var id = row.data("id");
+
+                swal({
+                    title: "Are you sure?",
+                    text: "You will permanently delete this inventory record.",
+                    icon: "warning",
+                    buttons: true,
+                    dangerMode: true,
+                }).then((willDelete) => {
+                    if (willDelete) {
+                        $.ajax({
+                            url: "/InventoryItems/DeleteInventoryItemAPI",
+                            type: "POST",
+                            data: { id: id },
+                            success: function (res) {
+                                if (res.success) {
+                                    swal("Deleted!", "Record has been deleted.", "success")
+                                        .then(() => row.remove());
+                                } else {
+                                    swal("Error!", res.message, "error");
+                                }
+                            }
+                        });
+                    }
+                });
+            });
+
+            // --- Edit Main Inventory Item ---
+            $(document).on("click", ".editInvBtn", function () {
+                var row = $(this).closest("tr");
+                var id = row.data("id");
+
+                $.ajax({
+                    url: "/InventoryItems/GetInventoryItemAPI",
+                    type: "GET",
+                    data: { id: id },
+                    success: function (item) {
+                        if (item) {
+                            $("#inventoryItemId").val(item.Id);
+                            $("#itemid").val(item.ItemId);
+                            $("#Unit").val(item.Unit);
+                            $("#displayCategory").val(item.CategoryName);
+                            // Set quantity
+                            $("#addItemForm input[name='NewItem.Quantity']").val(item.Quantity);
+                            // Set Expiry Date if not null
+                            if (item.ExpirationDate) {
+                                $("#addItemForm input[name='NewItem.ExpirationDate']").val(item.ExpirationDate);
+                            } else {
+                                $("#addItemForm input[name='NewItem.ExpirationDate']").val("");
+                            }
+
+                            // Update Form Text for Edit Mode
+                            $("#addItemFormContainer h2.section-title").html('<i class="fas fa-edit"></i> Edit Inventory Item');
+                            $("#saveInventoryItemBtn").html('<i class="fas fa-save me-1"></i> Update Item');
+                            
+                            // Scroll to form and show
+                            $("#addItemFormContainer").slideDown();
+                            $('html, body').animate({
+                                scrollTop: $("#addItemFormContainer").offset().top - 100
+                            }, 500);
+                        } else {
+                            swal("Error!", "Unable to retrieve item data.", "error");
+                        }
+                    }
+                });
+            });
+
+        });
+    </script>
+
+
+}

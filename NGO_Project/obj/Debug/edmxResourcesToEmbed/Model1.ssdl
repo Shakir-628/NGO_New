@@ -1,0 +1,471 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Schema Namespace="NGOModel.Store" Provider="System.Data.SqlClient" ProviderManifestToken="2012" Alias="Self" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
+  <EntityType Name="AidRequests">
+    <Key>
+      <PropertyRef Name="RequestId" />
+    </Key>
+    <Property Name="RequestId" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+    <Property Name="UserId" Type="int" Nullable="false" />
+    <Property Name="RequestTitle" Type="nvarchar" MaxLength="255" />
+    <Property Name="Description" Type="nvarchar(max)" />
+    <Property Name="UrgencyLevel" Type="nvarchar" MaxLength="50" />
+    <Property Name="Location" Type="nvarchar" MaxLength="100" />
+    <Property Name="PostDate" Type="datetime" />
+    <Property Name="IsActive" Type="bit" />
+    <Property Name="IsPosted" Type="int" />
+    <Property Name="CategoryId" Type="int" />
+  </EntityType>
+  <EntityType Name="CashDonations">
+    <Key>
+      <PropertyRef Name="CashDonationId" />
+    </Key>
+    <Property Name="CashDonationId" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+    <Property Name="DonorId" Type="int" Nullable="false" />
+    <Property Name="UserId" Type="int" Nullable="false" />
+    <Property Name="Amount" Type="decimal" Precision="18" Scale="2" Nullable="false" />
+    <Property Name="Currency" Type="nvarchar" MaxLength="10" />
+    <Property Name="DonationDate" Type="datetime" />
+    <Property Name="Notes" Type="nvarchar(max)" />
+  </EntityType>
+  <EntityType Name="Category">
+    <Key>
+      <PropertyRef Name="CategoryId" />
+    </Key>
+    <Property Name="CategoryId" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+    <Property Name="CategoryName" Type="varchar" MaxLength="50" />
+    <Property Name="Unit" Type="nvarchar" MaxLength="10" />
+  </EntityType>
+  <EntityType Name="DistributionOrderItems">
+    <Key>
+      <PropertyRef Name="DistributionOrderItemId" />
+    </Key>
+    <Property Name="DistributionOrderItemId" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+    <Property Name="DistributionOrderId" Type="int" Nullable="false" />
+    <Property Name="ItemId" Type="int" Nullable="false" />
+    <Property Name="Quantity" Type="decimal" Precision="18" Scale="2" Nullable="false" />
+    <Property Name="Unit" Type="nvarchar" MaxLength="50" />
+  </EntityType>
+  <EntityType Name="DistributionOrders">
+    <Key>
+      <PropertyRef Name="DistributionOrderId" />
+    </Key>
+    <Property Name="DistributionOrderId" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+    <Property Name="UserId" Type="int" Nullable="false" />
+    <Property Name="DistributionLocation" Type="nvarchar" MaxLength="255" Nullable="false" />
+    <Property Name="OrderDate" Type="datetime" />
+    <Property Name="Status" Type="nvarchar" MaxLength="50" />
+    <Property Name="Notes" Type="nvarchar(max)" />
+  </EntityType>
+  <EntityType Name="Documents">
+    <Key>
+      <PropertyRef Name="DocumentId" />
+    </Key>
+    <Property Name="DocumentId" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+    <Property Name="BeneficiaryName" Type="varchar" MaxLength="30" Nullable="false" />
+    <Property Name="Purpose" Type="varchar" MaxLength="50" Nullable="false" />
+    <Property Name="Items" Type="varchar" MaxLength="255" />
+    <Property Name="CNIC" Type="varchar" MaxLength="20" />
+    <Property Name="PhoneNo" Type="varchar" MaxLength="20" />
+    <Property Name="GeneratedDate" Type="datetime" />
+  </EntityType>
+  <EntityType Name="DonationItems">
+    <Key>
+      <PropertyRef Name="DonationItemId" />
+    </Key>
+    <Property Name="DonationItemId" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+    <Property Name="DonationId" Type="int" Nullable="false" />
+    <Property Name="ItemId" Type="int" Nullable="false" />
+    <Property Name="Quantity" Type="decimal" Precision="18" Scale="2" />
+    <Property Name="Unit" Type="nvarchar" MaxLength="50" />
+    <Property Name="CreationDate" Type="datetime" />
+    <Property Name="UpdateDate" Type="datetime" />
+  </EntityType>
+  <EntityType Name="Donations">
+    <Key>
+      <PropertyRef Name="DonationId" />
+    </Key>
+    <Property Name="DonationId" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+    <Property Name="DonorId" Type="int" Nullable="false" />
+    <Property Name="UserId" Type="int" Nullable="false" />
+    <Property Name="DonationDate" Type="datetime" />
+    <Property Name="Notes" Type="nvarchar(max)" />
+    <Property Name="Status" Type="nvarchar" MaxLength="50" />
+  </EntityType>
+  <EntityType Name="Donors">
+    <Key>
+      <PropertyRef Name="DonorId" />
+    </Key>
+    <Property Name="DonorId" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+    <Property Name="NGOId" Type="int" Nullable="false" />
+    <Property Name="FullName" Type="varchar" MaxLength="30" Nullable="false" />
+    <Property Name="Email" Type="varchar" MaxLength="30" />
+    <Property Name="PhoneNumber" Type="varchar" MaxLength="50" />
+    <Property Name="InventoryItemId" Type="int" />
+    <Property Name="CreatedDate" Type="datetime" />
+  </EntityType>
+  <EntityType Name="InventoryItems">
+    <Key>
+      <PropertyRef Name="Id" />
+    </Key>
+    <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+    <Property Name="ItemId" Type="int" Nullable="false" />
+    <Property Name="Quantity" Type="decimal" Precision="18" Scale="2" />
+    <Property Name="QualityCheckStatus" Type="bit" />
+    <Property Name="ExpirationDate" Type="datetime" />
+    <Property Name="LastUpdated" Type="datetime" />
+    <Property Name="CreatedBy" Type="int" />
+  </EntityType>
+  <EntityType Name="ItemMaster">
+    <Key>
+      <PropertyRef Name="Id" />
+    </Key>
+    <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+    <Property Name="ItemName" Type="nvarchar" MaxLength="255" />
+    <Property Name="Unit" Type="varchar" MaxLength="50" />
+    <Property Name="CategoryId" Type="int" />
+    <Property Name="Status" Type="bit" />
+    <Property Name="LastUpdated" Type="datetime" />
+    <Property Name="CreatedBy" Type="int" />
+  </EntityType>
+  <EntityType Name="RequestedItems">
+    <Key>
+      <PropertyRef Name="RequestedItemId" />
+    </Key>
+    <Property Name="RequestedItemId" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+    <Property Name="RequestId" Type="int" Nullable="false" />
+    <Property Name="ItemName" Type="varchar" MaxLength="250" Nullable="false" />
+    <Property Name="Quantity" Type="decimal" Precision="18" Scale="2" Nullable="false" />
+    <Property Name="Unit" Type="varchar" MaxLength="50" />
+    <Property Name="ItemRequestCount" Type="int" />
+  </EntityType>
+  <EntityType Name="Users">
+    <Key>
+      <PropertyRef Name="UserId" />
+    </Key>
+    <Property Name="UserId" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+    <Property Name="Title" Type="varchar" MaxLength="10" />
+    <Property Name="FirstName" Type="varchar" MaxLength="30" Nullable="false" />
+    <Property Name="LastName" Type="varchar" MaxLength="30" />
+    <Property Name="Username" Type="varchar" MaxLength="30" Nullable="false" />
+    <Property Name="Email" Type="varchar" MaxLength="30" Nullable="false" />
+    <Property Name="PhoneNumber" Type="varchar" MaxLength="30" />
+    <Property Name="Address" Type="varchar" MaxLength="100" />
+    <Property Name="CNIC" Type="varchar" MaxLength="15" />
+    <Property Name="Type" Type="int" />
+    <Property Name="Password" Type="varchar" MaxLength="30" Nullable="false" />
+    <Property Name="City" Type="varchar" MaxLength="20" />
+    <Property Name="Created_Date" Type="datetime" />
+    <Property Name="Updated_Date" Type="datetime" />
+  </EntityType>
+  <EntityType Name="UserType">
+    <Key>
+      <PropertyRef Name="TypeId" />
+    </Key>
+    <Property Name="TypeId" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+    <Property Name="Type" Type="varchar" MaxLength="50" />
+  </EntityType>
+  <Association Name="FK__Distribut__Distr__6E01572D">
+    <End Role="DistributionOrders" Type="Self.DistributionOrders" Multiplicity="1" />
+    <End Role="DistributionOrderItems" Type="Self.DistributionOrderItems" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="DistributionOrders">
+        <PropertyRef Name="DistributionOrderId" />
+      </Principal>
+      <Dependent Role="DistributionOrderItems">
+        <PropertyRef Name="DistributionOrderId" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK_AidRequests_Category">
+    <End Role="Category" Type="Self.Category" Multiplicity="0..1" />
+    <End Role="AidRequests" Type="Self.AidRequests" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="Category">
+        <PropertyRef Name="CategoryId" />
+      </Principal>
+      <Dependent Role="AidRequests">
+        <PropertyRef Name="CategoryId" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK_AidRequests_Users">
+    <End Role="Users" Type="Self.Users" Multiplicity="1" />
+    <End Role="AidRequests" Type="Self.AidRequests" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="Users">
+        <PropertyRef Name="UserId" />
+      </Principal>
+      <Dependent Role="AidRequests">
+        <PropertyRef Name="UserId" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK_CashDonations_Donors">
+    <End Role="Donors" Type="Self.Donors" Multiplicity="1" />
+    <End Role="CashDonations" Type="Self.CashDonations" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="Donors">
+        <PropertyRef Name="DonorId" />
+      </Principal>
+      <Dependent Role="CashDonations">
+        <PropertyRef Name="DonorId" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK_CashDonations_Users">
+    <End Role="Users" Type="Self.Users" Multiplicity="1" />
+    <End Role="CashDonations" Type="Self.CashDonations" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="Users">
+        <PropertyRef Name="UserId" />
+      </Principal>
+      <Dependent Role="CashDonations">
+        <PropertyRef Name="UserId" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK_DistributionOrderItems_ItemMaster">
+    <End Role="ItemMaster" Type="Self.ItemMaster" Multiplicity="1" />
+    <End Role="DistributionOrderItems" Type="Self.DistributionOrderItems" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="ItemMaster">
+        <PropertyRef Name="Id" />
+      </Principal>
+      <Dependent Role="DistributionOrderItems">
+        <PropertyRef Name="ItemId" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK_DistributionOrders_Users">
+    <End Role="Users" Type="Self.Users" Multiplicity="1" />
+    <End Role="DistributionOrders" Type="Self.DistributionOrders" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="Users">
+        <PropertyRef Name="UserId" />
+      </Principal>
+      <Dependent Role="DistributionOrders">
+        <PropertyRef Name="UserId" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK_DonationItems_Donations">
+    <End Role="Donations" Type="Self.Donations" Multiplicity="1" />
+    <End Role="DonationItems" Type="Self.DonationItems" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="Donations">
+        <PropertyRef Name="DonationId" />
+      </Principal>
+      <Dependent Role="DonationItems">
+        <PropertyRef Name="DonationId" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK_DonationItems_ItemMaster">
+    <End Role="ItemMaster" Type="Self.ItemMaster" Multiplicity="1" />
+    <End Role="DonationItems" Type="Self.DonationItems" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="ItemMaster">
+        <PropertyRef Name="Id" />
+      </Principal>
+      <Dependent Role="DonationItems">
+        <PropertyRef Name="ItemId" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK_Donations_Donors">
+    <End Role="Donors" Type="Self.Donors" Multiplicity="1" />
+    <End Role="Donations" Type="Self.Donations" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="Donors">
+        <PropertyRef Name="DonorId" />
+      </Principal>
+      <Dependent Role="Donations">
+        <PropertyRef Name="DonorId" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK_Donations_Users">
+    <End Role="Users" Type="Self.Users" Multiplicity="1" />
+    <End Role="Donations" Type="Self.Donations" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="Users">
+        <PropertyRef Name="UserId" />
+      </Principal>
+      <Dependent Role="Donations">
+        <PropertyRef Name="UserId" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK_Donors_InventoryItems">
+    <End Role="InventoryItems" Type="Self.InventoryItems" Multiplicity="0..1" />
+    <End Role="Donors" Type="Self.Donors" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="InventoryItems">
+        <PropertyRef Name="Id" />
+      </Principal>
+      <Dependent Role="Donors">
+        <PropertyRef Name="InventoryItemId" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK_Donors_Users">
+    <End Role="Users" Type="Self.Users" Multiplicity="1" />
+    <End Role="Donors" Type="Self.Donors" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="Users">
+        <PropertyRef Name="UserId" />
+      </Principal>
+      <Dependent Role="Donors">
+        <PropertyRef Name="NGOId" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK_InventoryItems_ItemMaster">
+    <End Role="ItemMaster" Type="Self.ItemMaster" Multiplicity="1" />
+    <End Role="InventoryItems" Type="Self.InventoryItems" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="ItemMaster">
+        <PropertyRef Name="Id" />
+      </Principal>
+      <Dependent Role="InventoryItems">
+        <PropertyRef Name="ItemId" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK_InventoryItems_Users">
+    <End Role="Users" Type="Self.Users" Multiplicity="0..1" />
+    <End Role="InventoryItems" Type="Self.InventoryItems" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="Users">
+        <PropertyRef Name="UserId" />
+      </Principal>
+      <Dependent Role="InventoryItems">
+        <PropertyRef Name="CreatedBy" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK_ItemMaster_Category">
+    <End Role="Category" Type="Self.Category" Multiplicity="0..1" />
+    <End Role="ItemMaster" Type="Self.ItemMaster" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="Category">
+        <PropertyRef Name="CategoryId" />
+      </Principal>
+      <Dependent Role="ItemMaster">
+        <PropertyRef Name="CategoryId" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK_RequestedItems_AidRequests">
+    <End Role="AidRequests" Type="Self.AidRequests" Multiplicity="1" />
+    <End Role="RequestedItems" Type="Self.RequestedItems" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="AidRequests">
+        <PropertyRef Name="RequestId" />
+      </Principal>
+      <Dependent Role="RequestedItems">
+        <PropertyRef Name="RequestId" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK_Users_UserType">
+    <End Role="UserType" Type="Self.UserType" Multiplicity="0..1" />
+    <End Role="Users" Type="Self.Users" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="UserType">
+        <PropertyRef Name="TypeId" />
+      </Principal>
+      <Dependent Role="Users">
+        <PropertyRef Name="Type" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <EntityContainer Name="NGOModelStoreContainer">
+    <EntitySet Name="AidRequests" EntityType="Self.AidRequests" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="CashDonations" EntityType="Self.CashDonations" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="Category" EntityType="Self.Category" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="DistributionOrderItems" EntityType="Self.DistributionOrderItems" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="DistributionOrders" EntityType="Self.DistributionOrders" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="Documents" EntityType="Self.Documents" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="DonationItems" EntityType="Self.DonationItems" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="Donations" EntityType="Self.Donations" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="Donors" EntityType="Self.Donors" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="InventoryItems" EntityType="Self.InventoryItems" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="ItemMaster" EntityType="Self.ItemMaster" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="RequestedItems" EntityType="Self.RequestedItems" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="Users" EntityType="Self.Users" Schema="dbo" store:Type="Tables" />
+    <EntitySet Name="UserType" EntityType="Self.UserType" Schema="dbo" store:Type="Tables" />
+    <AssociationSet Name="FK__Distribut__Distr__6E01572D" Association="Self.FK__Distribut__Distr__6E01572D">
+      <End Role="DistributionOrders" EntitySet="DistributionOrders" />
+      <End Role="DistributionOrderItems" EntitySet="DistributionOrderItems" />
+    </AssociationSet>
+    <AssociationSet Name="FK_AidRequests_Category" Association="Self.FK_AidRequests_Category">
+      <End Role="Category" EntitySet="Category" />
+      <End Role="AidRequests" EntitySet="AidRequests" />
+    </AssociationSet>
+    <AssociationSet Name="FK_AidRequests_Users" Association="Self.FK_AidRequests_Users">
+      <End Role="Users" EntitySet="Users" />
+      <End Role="AidRequests" EntitySet="AidRequests" />
+    </AssociationSet>
+    <AssociationSet Name="FK_CashDonations_Donors" Association="Self.FK_CashDonations_Donors">
+      <End Role="Donors" EntitySet="Donors" />
+      <End Role="CashDonations" EntitySet="CashDonations" />
+    </AssociationSet>
+    <AssociationSet Name="FK_CashDonations_Users" Association="Self.FK_CashDonations_Users">
+      <End Role="Users" EntitySet="Users" />
+      <End Role="CashDonations" EntitySet="CashDonations" />
+    </AssociationSet>
+    <AssociationSet Name="FK_DistributionOrderItems_ItemMaster" Association="Self.FK_DistributionOrderItems_ItemMaster">
+      <End Role="ItemMaster" EntitySet="ItemMaster" />
+      <End Role="DistributionOrderItems" EntitySet="DistributionOrderItems" />
+    </AssociationSet>
+    <AssociationSet Name="FK_DistributionOrders_Users" Association="Self.FK_DistributionOrders_Users">
+      <End Role="Users" EntitySet="Users" />
+      <End Role="DistributionOrders" EntitySet="DistributionOrders" />
+    </AssociationSet>
+    <AssociationSet Name="FK_DonationItems_Donations" Association="Self.FK_DonationItems_Donations">
+      <End Role="Donations" EntitySet="Donations" />
+      <End Role="DonationItems" EntitySet="DonationItems" />
+    </AssociationSet>
+    <AssociationSet Name="FK_DonationItems_ItemMaster" Association="Self.FK_DonationItems_ItemMaster">
+      <End Role="ItemMaster" EntitySet="ItemMaster" />
+      <End Role="DonationItems" EntitySet="DonationItems" />
+    </AssociationSet>
+    <AssociationSet Name="FK_Donations_Donors" Association="Self.FK_Donations_Donors">
+      <End Role="Donors" EntitySet="Donors" />
+      <End Role="Donations" EntitySet="Donations" />
+    </AssociationSet>
+    <AssociationSet Name="FK_Donations_Users" Association="Self.FK_Donations_Users">
+      <End Role="Users" EntitySet="Users" />
+      <End Role="Donations" EntitySet="Donations" />
+    </AssociationSet>
+    <AssociationSet Name="FK_Donors_InventoryItems" Association="Self.FK_Donors_InventoryItems">
+      <End Role="InventoryItems" EntitySet="InventoryItems" />
+      <End Role="Donors" EntitySet="Donors" />
+    </AssociationSet>
+    <AssociationSet Name="FK_Donors_Users" Association="Self.FK_Donors_Users">
+      <End Role="Users" EntitySet="Users" />
+      <End Role="Donors" EntitySet="Donors" />
+    </AssociationSet>
+    <AssociationSet Name="FK_InventoryItems_ItemMaster" Association="Self.FK_InventoryItems_ItemMaster">
+      <End Role="ItemMaster" EntitySet="ItemMaster" />
+      <End Role="InventoryItems" EntitySet="InventoryItems" />
+    </AssociationSet>
+    <AssociationSet Name="FK_InventoryItems_Users" Association="Self.FK_InventoryItems_Users">
+      <End Role="Users" EntitySet="Users" />
+      <End Role="InventoryItems" EntitySet="InventoryItems" />
+    </AssociationSet>
+    <AssociationSet Name="FK_ItemMaster_Category" Association="Self.FK_ItemMaster_Category">
+      <End Role="Category" EntitySet="Category" />
+      <End Role="ItemMaster" EntitySet="ItemMaster" />
+    </AssociationSet>
+    <AssociationSet Name="FK_RequestedItems_AidRequests" Association="Self.FK_RequestedItems_AidRequests">
+      <End Role="AidRequests" EntitySet="AidRequests" />
+      <End Role="RequestedItems" EntitySet="RequestedItems" />
+    </AssociationSet>
+    <AssociationSet Name="FK_Users_UserType" Association="Self.FK_Users_UserType">
+      <End Role="UserType" EntitySet="UserType" />
+      <End Role="Users" EntitySet="Users" />
+    </AssociationSet>
+  </EntityContainer>
+</Schema>

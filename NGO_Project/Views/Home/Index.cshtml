@@ -1,0 +1,41 @@
+@{
+    ViewBag.Title = "Home Page";
+    Layout = "~/Views/Shared/_LayoutDonor.cshtml";
+}
+
+<main>
+    <div class="p-5 mb-4 bg-light rounded-3 shadow-sm" style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: white;">
+        <div class="container-fluid py-5">
+            <h1 class="display-5 fw-bold" style="font-size: 2.2rem;">Welcome to GOODWILL CONTRIBUTION AND AID MANAGEMENT SYSTEM</h1>
+            <p class="col-md-8 fs-4">Join our mission to bridge the gap between community needs and donor contributions. Every small contribution makes a significant impact on someone's life.</p>
+            <a href="@Url.Action("Donor", "Dashboard")" class="btn btn-light btn-lg px-4 fw-bold" style="color: #2563eb;">View Active Requests</a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <section class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm p-4">
+                <i class="fas fa-heart fa-3x mb-3 text-danger"></i>
+                <h2 class="h4 fw-bold">Make a Donation</h2>
+                <p>Support various causes by donating items or funds. Your generosity helps provide essential resources to those in need.</p>
+                <a class="btn btn-outline-primary mt-auto" href="@Url.Action("Donor", "Dashboard")">Get Started &raquo;</a>
+            </div>
+        </section>
+        <section class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm p-4">
+                <i class="fas fa-search fa-3x mb-3 text-primary"></i>
+                <h2 class="h4 fw-bold">Find Requests</h2>
+                <p>Browse through active aid requests from registered NGOs and find causes that resonate with you the most.</p>
+                <a class="btn btn-outline-primary mt-auto" href="@Url.Action("Donor", "Dashboard")">Browse &raquo;</a>
+            </div>
+        </section>
+        <section class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm p-4">
+                <i class="fas fa-users fa-3x mb-3 text-success"></i>
+                <h2 class="h4 fw-bold">Impact Community</h2>
+                <p>See the real-time impact of your contributions and how they are helping local communities thrive and recover.</p>
+                <a class="btn btn-outline-primary mt-auto" href="#">Learn more &raquo;</a>
+            </div>
+        </section>
+    </div>
+</main>

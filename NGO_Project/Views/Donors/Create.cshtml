@@ -1,0 +1,65 @@
+@model NGO_Project.Donor
+
+@{
+    ViewBag.Title = "Create";
+    Layout = "~/Views/Shared/_LayoutNGO.cshtml";
+}
+
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow border-0" style="border-radius: 15px;">
+                <div class="card-header bg-primary text-white py-3" style="border-radius: 15px 15px 0 0;">
+                    <h4 class="mb-0"><i class="fas fa-plus-circle me-2"></i>Register New Donor</h4>
+                </div>
+                <div class="card-body p-4">
+                    @using (Html.BeginForm()) 
+                    {
+                        @Html.AntiForgeryToken()
+                        
+                        <div class="form-horizontal">
+                            @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Full Name</label>
+                                    @Html.EditorFor(model => model.FullName, new { htmlAttributes = new { @class = "form-control", placeholder = "Enter donor's full name" } })
+                                    @Html.ValidationMessageFor(model => model.FullName, "", new { @class = "text-danger" })
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Email Address</label>
+                                    @Html.EditorFor(model => model.Email, new { htmlAttributes = new { @class = "form-control", placeholder = "email@example.com" } })
+                                    @Html.ValidationMessageFor(model => model.Email, "", new { @class = "text-danger" })
+                                </div>
+                            </div>
+
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Phone Number</label>
+                                    @Html.EditorFor(model => model.PhoneNumber, new { htmlAttributes = new { @class = "form-control", placeholder = "+92 3XX XXXXXXX" } })
+                                    @Html.ValidationMessageFor(model => model.PhoneNumber, "", new { @class = "text-danger" })
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Default Donation Item</label>
+                                    @Html.DropDownList("InventoryItemId", null, "--- Select Assigned Item ---", htmlAttributes: new { @class = "form-control" })
+                                    @Html.ValidationMessageFor(model => model.InventoryItemId, "", new { @class = "text-danger" })
+                                    <small class="text-muted">Link this donor to a specific inventory category</small>
+                                </div>
+                            </div>
+
+                            <hr class="my-4">
+
+                            <div class="d-flex justify-content-between align-items-center">
+                                @Html.ActionLink("Back to List", "Index", null, new { @class = "text-decoration-none text-secondary" })
+                                <div>
+                                    <button type="reset" class="btn btn-light me-2">Reset</button>
+                                    <input type="submit" value="Create Donor" class="btn btn-primary px-4" />
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

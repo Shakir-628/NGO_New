@@ -1,0 +1,304 @@
+@model NGO_Project.User
+
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - GOODWILL CONTRIBUTION AND AID MANAGEMENT SYSTEM</title>
+    <link rel="icon" type="image/png" href="~/assets/img/logo/HelpingHands.png" />
+
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet" />
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --secondary: #10b981;
+            --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --glass-bg: rgba(255, 255, 255, 0.9);
+            --text-main: #1f2937;
+            --text-muted: #6b7280;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+            padding: 20px;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        .login-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            padding: 50px;
+            max-width: 500px;
+            width: 100%;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: transform 0.3s ease;
+        }
+
+        .login-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .header-section {
+            text-align: center;
+            margin-bottom: 35px;
+        }
+
+        .logo-wrapper {
+            background: white;
+            width: 100px;
+            height: 100px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            border: 2px solid #f3f4f6;
+        }
+
+        .logo-wrapper img {
+            max-width: 80%;
+            height: auto;
+            object-fit: contain;
+        }
+
+        .header-section h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+
+        .header-section p {
+            color: var(--text-muted);
+            font-size: 1rem;
+            line-height: 1.5;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            display: block;
+        }
+
+        .input-container {
+            position: relative;
+            margin-bottom: 25px;
+        }
+
+        .form-control {
+            height: 54px;
+            background: #f9fafb;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 10px 20px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            color: var(--text-main);
+        }
+
+        .form-control:focus {
+            background: white;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+            outline: none;
+        }
+
+        .input-group-append .input-group-text {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding-right: 20px;
+        }
+
+        .login-button {
+            width: 100%;
+            height: 54px;
+            background: linear-gradient(135deg, var(--primary) 0%, #6366f1 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.3);
+            margin-top: 10px;
+        }
+
+        .login-button:hover {
+            transform: scale(1.02);
+            box-shadow: 0 20px 25px -5px rgba(79, 70, 229, 0.4);
+            background: linear-gradient(135deg, #4338ca 0%, var(--primary) 100%);
+        }
+
+        .login-button:active {
+            transform: scale(0.98);
+        }
+
+        .signup-link {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 0.95rem;
+            color: var(--text-muted);
+        }
+
+        .signup-link a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 700;
+            transition: color 0.2s;
+        }
+
+        .signup-link a:hover {
+            color: var(--primary-hover);
+            text-decoration: underline;
+        }
+
+        .text-danger {
+            font-size: 0.8rem;
+            margin-top: 5px;
+            font-weight: 500;
+        }
+
+        /* Float animation for the whole card */
+        .animate-up {
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        @@keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-card animate__animated animate__fadeInUp">
+        <div class="header-section">
+            <div class="logo-wrapper animate__animated animate__zoomIn animate__delay-1s">
+                <img src="~/assets/img/logo/HelpingHands.jpg" alt="Logo" />
+            </div>
+            <h1 style="font-size: 1.6rem;">GOODWILL CONTRIBUTION AND AID MANAGEMENT SYSTEM</h1>
+            <p>Empowering Change, Strengthening Communities</p>
+        </div>
+
+        <div id="login-form">
+            @using (Html.BeginForm("Login", "Users", FormMethod.Post, new { id = "donorForm" }))
+            {
+                @Html.AntiForgeryToken()
+
+                <div class="form-group">
+                    <label>Account Type</label>
+                    @Html.DropDownList("Type", (SelectList)ViewBag.UserTypelist, "-- Select User Type --", new { @class = "form-control" })
+                    @Html.ValidationMessage("Type", "", new { @class = "text-danger" })
+                </div>
+
+                <div class="form-group">
+                    <label>Username</label>
+                    @Html.TextBoxFor(m => m.Username, new { @class = "form-control", placeholder = "e.g. john_doe", autocomplete = "username" })
+                    @Html.ValidationMessage("Username", "", new { @class = "text-danger" })
+                </div>
+
+                <div class="form-group">
+                    <label>Password</label>
+                    <div class="input-group">
+                        @Html.PasswordFor(m => m.Password, new { @class = "form-control", id = "donorPassword", placeholder = "••••••••", autocomplete = "current-password" })
+                        <div class="input-group-append">
+                            <span class="input-group-text" id="toggleDonorPassword" style="cursor: pointer;">
+                                <i class="fa fa-eye" id="donorEyeIcon"></i>
+                            </span>
+                        </div>
+                    </div>
+                    @Html.ValidationMessage("Password", "", new { @class = "text-danger" })
+                    @Html.ValidationMessage("InvalidUser", "", new { @class = "text-danger" })
+                </div>
+
+                <button type="submit" class="login-button">Sign In</button>
+            }
+        </div>
+
+        <div class="signup-link">
+            New to Goodwill Gateway? <a href="@Url.Action("Registration", "Users")">Create an Account</a>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Toggle password visibility
+            $("#toggleDonorPassword").click(function() {
+                const passwordField = $("#donorPassword");
+                const icon = $("#donorEyeIcon");
+                
+                if (passwordField.attr("type") === "password") {
+                    passwordField.attr("type", "text");
+                    icon.removeClass("fa-eye").addClass("fa-eye-slash");
+                } else {
+                    passwordField.attr("type", "password");
+                    icon.removeClass("fa-eye-slash").addClass("fa-eye");
+                }
+            });
+
+            // Form validation and submission
+            $("#donorForm").submit(function(event) {
+                const userType = $("#Type").val();
+                const username = $("#Username").val();
+                const password = $("#donorPassword").val();
+
+                if (!userType || !username || !password) {
+                    event.preventDefault();
+                    swal({
+                        title: "Required Fields",
+                        text: "Please complete all fields to proceed.",
+                        icon: "warning",
+                        buttons: {
+                            confirm: {
+                                text: "Got it!",
+                                className: "btn-primary"
+                            }
+                        }
+                    });
+                } else {
+                    // Add a loading state to the button
+                    const btn = $(this).find("button[type='submit']");
+                    btn.html('<i class="fas fa-spinner fa-spin"></i> Signing in...');
+                    btn.prop("disabled", true);
+                }
+            });
+
+            // Add subtle focus animation to inputs
+            $(".form-control").focus(function() {
+                $(this).closest(".form-group").find("label").css("color", "var(--primary)");
+            }).blur(function() {
+                $(this).closest(".form-group").find("label").css("color", "var(--text-main)");
+            });
+        });
+    </script>
+</body>
+</html>

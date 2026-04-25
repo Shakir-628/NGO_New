@@ -1,0 +1,442 @@
+﻿@model NGO_Project.Models.InventoryDocumentViewModel
+
+@{
+    Layout = "~/Views/Shared/_LayoutNGO.cshtml";
+}
+
+<title>Inventory Disbursement System</title>
+<style>
+    #disbursement-view.hidden,
+    #documents-view.hidden {
+        display: none !important;
+    }
+</style>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<div id="app" class="max-w-7xl mx-auto p-6 min-h-screen bg-gray-50">
+    <!-- Header -->
+    <div class="bg-white rounded-xl shadow-md mb-8 p-6 flex flex-col md:flex-row md:items-center md:justify-between">
+        <h1 class="text-3xl font-bold text-gray-800 mb-4 md:mb-0">📦 Inventory Disbursement System</h1>
+
+        <div class="flex space-x-2 mb-4">
+            <button id="disbursement-tab"
+                    class="px-4 py-2 rounded bg-blue-600 text-white">
+                Disbursement
+            </button>
+            <button id="documents-tab"
+                    class="px-4 py-2 rounded bg-gray-200 text-gray-700">
+                Documents
+            </button>
+        </div>
+    </div>
+
+    <!-- Main View (Disbursement) -->
+    <div id="disbursement-view">
+        <h2 class="text-lg font-bold mb-2">Disbursement View</h2>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Inventory -->
+            <div class="lg:col-span-2 bg-white rounded-xl shadow-md p-6">
+                <h2 class="text-xl font-semibold text-gray-800 mb-6">Current Inventory</h2>
+
+                <!-- Filters -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div class="relative">
+                        <i data-lucide="search" class="absolute left-3 top-3 w-4 h-4 text-gray-400"></i>
+                        <input type="text" id="search-item-input" placeholder="Search by item name..."
+                               class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500" />
+                    </div>
+                    <div class="relative">
+                        <i data-lucide="tag" class="absolute left-3 top-3 w-4 h-4 text-gray-400"></i>
+                        <input type="text" id="search-category-input" placeholder="Search by category..."
+                               class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500" />
+                    </div>`
+                    <div>
+                        <button id="reset-filters"
+                                class="w-full py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg shadow-sm font-medium">
+                            Reset Filters
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Inventory Grid -->
+                <div id="inventory-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6 max-h-96 overflow-y-auto pr-2">
+                    @foreach (var item in Model.InventoryItems ?? new List<NGO_Project.InventoryItem>())
+                    {
+                        var isOut = (item.Quantity ?? 0) == 0;
+                        <div class="inventory-card border rounded-xl p-5 bg-white shadow-sm hover:shadow-md transition transform hover:scale-[1.02]
+                                    @(isOut ? "border-red-200 bg-red-50" : "border-gray-200")"
+                             data-name="@item.ItemName"
+                             data-category="@(item.Category?.CategoryName ?? "-")">
+                            <div class="flex justify-between items-start mb-4">
+                                <div>
+                                    <span class="inline-block text-xs text-gray-600 bg-gray-100 px-3 py-1 rounded-full">
+                                        @(item.Category?.CategoryName ?? "-")
+                                    </span>
+                                    <h3 class="font-semibold text-gray-800 text-lg mt-2">@item.ItemName</h3>
+                                    <p class="text-sm text-gray-500">Unit: @(item.Unit ?? "-")</p>
+                                </div>
+                                <div class="text-right">
+                                    <span class="text-xl font-bold @(isOut ? "text-red-600" : "text-green-600")">
+                                        @(item.Quantity.HasValue ? ((int)item.Quantity.Value).ToString() : "0")
+                                    </span>
+                                </div>
+                            </div>
+                            @if (!isOut)
+                            {
+                                <div class="flex items-center space-x-3">
+                                    <input type="number" placeholder="Qty" min="1" max="@(item.Quantity ?? 0)"
+                                           class="item-qty w-20 px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500" />
+                                    <button data-id="@item.Id"
+                                            data-name="@item.ItemName"
+                                            data-unit="@item.Unit"
+                                            data-category="@(item.Category?.CategoryName ?? "-")"
+                                            data-qty="@(item.Quantity.HasValue ? ((int)item.Quantity.Value).ToString() : "0")"
+                                            class="add-to-selection-btn px-4 py-1.5 bg-blue-600 text-white rounded-lg text-sm font-medium shadow hover:bg-blue-700">
+                                        Add
+                                    </button>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="flex items-center space-x-2">
+                                    <i data-lucide="alert-circle" class="w-5 h-5 text-red-500"></i>
+                                    <span class="text-sm text-red-600 font-medium">Out of Stock</span>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Selected Items -->
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h2 class="text-xl font-semibold text-gray-800 mb-6">Selected Items</h2>
+                <div id="selected-items-list" class="mb-6 max-h-64 overflow-y-auto space-y-2">
+                    <p class="text-gray-500 text-center py-6">No items selected</p>
+                </div>
+                <button id="process-disbursement-btn"
+                        class="w-full py-3 bg-green-600 text-white rounded-lg shadow font-semibold hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                        disabled>
+                    <i data-lucide="check-circle" class="w-5 h-5"></i>
+                    Process Disbursement
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Documents Tab -->
+    <div id="documents-view" class="hidden">
+        <h2 class="text-lg font-bold mb-2">Documents View</h2>
+        <div class="bg-white rounded-xl shadow-md p-6">
+            <h2 class="text-xl font-semibold text-gray-800 mb-6">Disbursement Documents</h2>
+
+            <div class="overflow-x-auto">
+                <table class="w-full border-collapse">
+                    <thead>
+                        <tr class="bg-gray-100 text-gray-600 text-left text-sm font-semibold">
+                            <th class="px-4 py-3">Beneficiary</th>
+                            <th class="px-4 py-3">Purpose</th>
+                            <th class="px-4 py-3">Items</th>
+                            <th class="px-4 py-3">Generated Date</th>
+                        </tr>
+                    </thead>
+                    <tbody id="documents-list">
+                        @if (Model.Documents != null && Model.Documents.Any())
+                        {
+                            foreach (var doc in Model.Documents)
+                            {
+                                // Parse items if stored as JSON string
+                                var itemsList = new List<dynamic>();
+                                try
+                                {
+                                    itemsList = Newtonsoft.Json.JsonConvert.DeserializeObject<List<dynamic>>(doc.Items);
+                                }
+                                catch { }
+
+                                <tr class="border-b hover:bg-gray-50">
+                                    <td class="px-4 py-3 font-medium text-gray-800">@doc.BeneficiaryName</td>
+                                    <td class="px-4 py-3 text-gray-700">@doc.Purpose</td>
+                                    <td class="px-4 py-3 text-gray-700">
+                                        @if (itemsList.Any())
+                                        {
+                                            <ul class="list-disc list-inside space-y-1 text-sm">
+                                                @foreach (var item in itemsList)
+                                                {
+                                                    <li>@item.name (@item.unit) — Qty: @item.requestedQty</li>
+                                                }
+                                            </ul>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-gray-400 italic">No items</span>
+                                        }
+                                    </td>
+                                    <td class="px-4 py-3 text-gray-600">
+                                        @(doc.GeneratedDate?.ToString("yyyy-MM-dd HH:mm"))
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="4" class="text-center py-6 text-gray-500 italic">
+                                    No disbursement documents found
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Process Disbursement Modal -->
+<div id="disbursement-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-lg max-w-lg w-full p-6">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6">Process Disbursement</h2>
+
+        <form id="disbursement-form" class="space-y-5">
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Beneficiary Name</label>
+                <input type="text" name="beneficiary" required
+                       class="mt-2 w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-blue-500 shadow-sm" />
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700">CNIC</label>
+                <input type="text" name="cnic" required
+                       class="cnic mt-2 w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-blue-500 shadow-sm" />
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Phone No</label>
+                <input type="text" name="phoneNo" required
+                       class="mobile mt-2 w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-blue-500 shadow-sm" />
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Purpose</label>
+                <textarea name="purpose" required
+                          class="mt-2 w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-blue-500 shadow-sm"></textarea>
+            </div>
+
+            <div>
+                <h3 class="font-semibold text-gray-800 mb-2">Selected Items</h3>
+                <div id="modal-selected-items" class="space-y-2 text-sm text-gray-700 bg-gray-50 p-3 rounded-lg"></div>
+            </div>
+
+
+            <div class="flex justify-end space-x-3 pt-4">
+                <button type="button" id="cancel-modal-btn"
+                        class="px-5 py-2.5 rounded-lg bg-gray-200 text-gray-700 font-medium hover:bg-gray-300">
+                    Cancel
+                </button>
+                <button type="submit"
+                        class="px-5 py-2.5 rounded-lg bg-green-600 text-white font-medium shadow hover:bg-green-700">
+                    Confirm Disbursement
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    lucide.createIcons();
+    let selectedItems = [];
+
+    // -----------------
+    // TAB SWITCHING FIX
+    // -----------------
+    const disbursementTab = document.getElementById("disbursement-tab");
+    const documentsTab = document.getElementById("documents-tab");
+    const disView = document.getElementById("disbursement-view");
+    const docView = document.getElementById("documents-view");
+
+    function showTab(tab) {
+        if (tab === "disbursement") {
+            // Show views
+            disView.classList.remove("hidden");
+            docView.classList.add("hidden");
+
+            // Active state styles
+            disbursementTab.classList.add("bg-blue-600", "text-white");
+            disbursementTab.classList.remove("bg-gray-200", "text-gray-700");
+
+            documentsTab.classList.add("bg-gray-200", "text-gray-700");
+            documentsTab.classList.remove("bg-blue-600", "text-white");
+        } else {
+            // Show views
+            docView.classList.remove("hidden");
+            disView.classList.add("hidden");
+
+            // Active state styles
+            documentsTab.classList.add("bg-blue-600", "text-white");
+            documentsTab.classList.remove("bg-gray-200", "text-gray-700");
+
+            disbursementTab.classList.add("bg-gray-200", "text-gray-700");
+            disbursementTab.classList.remove("bg-blue-600", "text-white");
+        }
+    }
+
+    // Event listeners
+    disbursementTab.addEventListener("click", () => showTab("disbursement"));
+    documentsTab.addEventListener("click", () => showTab("documents"));
+
+    // -----------------
+    // SELECTED ITEMS
+    // -----------------
+    document.addEventListener("click", function (e) {
+        if (e.target.closest(".add-to-selection-btn")) {
+            const btn = e.target.closest(".add-to-selection-btn");
+            const id = btn.dataset.id;
+            const name = btn.dataset.name;
+            const unit = btn.dataset.unit;
+            const category = btn.dataset.category;
+            const maxQty = parseInt(btn.dataset.qty);
+            const qtyInput = btn.previousElementSibling;
+            const qty = Math.min(parseInt(qtyInput.value) || 1, maxQty);
+
+            selectedItems.push({ id, name, unit, category, requestedQty: qty });
+            renderSelectedItems();
+            qtyInput.value = "";
+        }
+    });
+
+    function renderSelectedItems() {
+        const container = document.getElementById("selected-items-list");
+        if (selectedItems.length === 0) {
+            container.innerHTML = `<p class="text-gray-500 text-center py-4">No items selected</p>`;
+        } else {
+            container.innerHTML = selectedItems.map(item => `
+                <div class="flex justify-between items-center py-2 border-b">
+                    <div>
+                        <p class="font-medium text-sm">${item.name}</p>
+                        <p class="text-xs text-gray-500">${item.unit} | Qty: ${item.requestedQty}</p>
+                    </div>
+                    <button data-id="${item.id}" class="remove-item-btn text-red-500 hover:text-red-700">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            `).join("");
+        }
+        lucide.createIcons();
+        document.getElementById("process-disbursement-btn").disabled = selectedItems.length === 0;
+    }
+
+    document.addEventListener("click", function (e) {
+        if (e.target.closest(".remove-item-btn")) {
+            const id = e.target.closest(".remove-item-btn").dataset.id;
+            selectedItems = selectedItems.filter(i => i.id !== id);
+            renderSelectedItems();
+        }
+    });
+
+    // -----------------
+    // DISBURSEMENT MODAL
+    // -----------------
+    document.getElementById("process-disbursement-btn").addEventListener("click", () => {
+        const modal = document.getElementById("disbursement-modal");
+        const list = document.getElementById("modal-selected-items");
+        list.innerHTML = selectedItems.map(i => `<p>- ${i.name} (${i.unit}) x ${i.requestedQty}</p>`).join("");
+        modal.classList.remove("hidden");
+    });
+
+    document.getElementById("cancel-modal-btn").addEventListener("click", () => {
+        document.getElementById("disbursement-modal").classList.add("hidden");
+    });
+
+    // -----------------
+    // SAVE FORM
+    // -----------------
+    $("#disbursement-form").submit(function (e) {
+        e.preventDefault();
+
+        let payload = {
+            BeneficiaryName: this.beneficiary.value,
+            Cnic: this.cnic.value,
+            PhoneNo: this.phoneNo.value,
+            Purpose: this.purpose.value,
+            Items: JSON.stringify(selectedItems),
+            GeneratedDate: new Date().toISOString()
+        };
+
+        $.ajax({
+            url: '/DistributionOrders/SaveDisbursement',
+            type: 'POST',
+            data: payload,
+            success: function (res) {
+                if (res.success) {
+                    Swal.fire({
+                        icon: "success",
+                        title: "Success",
+                        text: res.message,
+                        showConfirmButton: false,
+                        timer: 4000
+                    }).then(() => {
+                        location.reload(); // reload after alert closes
+                    });
+                } else {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Failed",
+                        text: res.message,
+                    });
+                }
+            },
+        });
+    });
+
+    // -----------------
+    // INVENTORY FILTERS
+    // -----------------
+    function filterInventory() {
+        const itemQuery = document.getElementById("search-item-input").value.toLowerCase();
+        const categoryQuery = document.getElementById("search-category-input").value.toLowerCase();
+
+        const cards = document.querySelectorAll(".inventory-card");
+        let visibleCount = 0;
+
+        cards.forEach(card => {
+            const itemName = card.dataset.name.toLowerCase();
+            const category = card.dataset.category.toLowerCase();
+
+            const matchesItem = !itemQuery || itemName.includes(itemQuery);
+            const matchesCategory = !categoryQuery || category.includes(categoryQuery);
+
+            const isVisible = matchesItem && matchesCategory;
+            card.classList.toggle("hidden", !isVisible);
+
+            if (isVisible) visibleCount++;
+        });
+
+        // Check if message already exists
+        let notFoundMsg = document.getElementById("not-found-msg");
+        if (!notFoundMsg) {
+            notFoundMsg = document.createElement("p");
+            notFoundMsg.id = "not-found-msg";
+            notFoundMsg.className = "text-center text-gray-500 italic py-6";
+            notFoundMsg.textContent = "Item not found";
+            document.getElementById("inventory-grid").appendChild(notFoundMsg);
+        }
+
+        // Show/hide message based on results
+        notFoundMsg.style.display = visibleCount === 0 ? "block" : "none";
+    }
+
+
+    document.getElementById("search-item-input").addEventListener("input", filterInventory);
+    document.getElementById("search-category-input").addEventListener("input", filterInventory);
+    document.getElementById("reset-filters").addEventListener("click", () => {
+        document.getElementById("search-item-input").value = "";
+        document.getElementById("search-category-input").value = "";
+        filterInventory();
+    });
+</script>
+

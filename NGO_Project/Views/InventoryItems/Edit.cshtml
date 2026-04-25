@@ -1,0 +1,61 @@
+@model NGO_Project.InventoryItem
+
+@{
+    ViewBag.Title = "Edit";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Edit</h2>
+
+@using (Html.BeginForm())
+{
+    @Html.AntiForgeryToken()
+    
+    <div class="form-horizontal form-fields-grid card p-4">
+        <h4>Edit Inventory Item</h4>
+        <hr />
+        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+        @Html.HiddenFor(model => model.Id)
+        @Html.HiddenFor(model => model.CreatedBy)
+
+        <div class="form-group mb-3">
+            @Html.LabelFor(model => model.ItemId, "Item", htmlAttributes: new { @class = "control-label" })
+            @Html.DropDownList("ItemId", null, htmlAttributes: new { @class = "form-control" })
+            @Html.ValidationMessageFor(model => model.ItemId, "", new { @class = "text-danger" })
+        </div>
+
+        <div class="form-group mb-3">
+            @Html.LabelFor(model => model.Quantity, htmlAttributes: new { @class = "control-label" })
+            @Html.EditorFor(model => model.Quantity, new { htmlAttributes = new { @class = "form-control" } })
+            @Html.ValidationMessageFor(model => model.Quantity, "", new { @class = "text-danger" })
+        </div>
+
+        <div class="form-group mb-3">
+            @Html.LabelFor(model => model.Unit, htmlAttributes: new { @class = "control-label" })
+            @Html.EditorFor(model => model.Unit, new { htmlAttributes = new { @class = "form-control", @readonly = "readonly" } })
+            @Html.ValidationMessageFor(model => model.Unit, "", new { @class = "text-danger" })
+        </div>
+
+        <div class="form-group mb-3">
+            <div class="form-check">
+                <label class="form-check-label">
+                    @Html.CheckBoxFor(model => model.QualityCheckStatus ?? false, new { @class = "form-check-input" })
+                    Quality Check Status
+                </label>
+            </div>
+            @Html.ValidationMessageFor(model => model.QualityCheckStatus, "", new { @class = "text-danger" })
+        </div>
+
+        <div class="form-group mb-3">
+            @Html.LabelFor(model => model.ExpirationDate, htmlAttributes: new { @class = "control-label" })
+            @Html.EditorFor(model => model.ExpirationDate, new { htmlAttributes = new { @class = "form-control", @type="date" } })
+            @Html.ValidationMessageFor(model => model.ExpirationDate, "", new { @class = "text-danger" })
+        </div>
+
+        <div class="form-group mb-4">
+            <input type="submit" value="Save Changes" class="btn btn-primary" />
+            <a href="@Url.Action("Index")" class="btn btn-secondary ms-2">Cancel</a>
+        </div>
+    </div>
+}
+

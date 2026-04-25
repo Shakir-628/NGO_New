@@ -1,0 +1,23 @@
+﻿@model NGO_Project.NGOEntities
+
+@{
+    Layout = "~/Views/Shared/_LayoutNGO.cshtml";
+}
+
+<link href="~/assets/css/select2.css" rel="stylesheet" />
+<script src="~/assets/js/jquery-3.2.1.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.inputmask/5.0.8/jquery.inputmask.min.js"></script>
+<script src="~/assets/js/plugin/moment/moment.min.js"></script>
+<script>
+    jQuery('.numbersOnly').keyup(function () {
+        this.value = this.value.replace(/[^0-9]/g, '');
+    });
+
+    jQuery('.alphabetsonly').keyup(function () {
+        this.value = this.value.replace(/[^a-zA-Z\s]/g, '');
+    });
+    $('.mobile').inputmask("9999-9999999");
+    $('.cnic').inputmask("99999-9999999-9");
+    $('.searchable').select2();
+
+</script>

@@ -1,0 +1,720 @@
+﻿@model List<NGO_Project.InventoryItem>
+
+@{
+    Layout = "~/Views/Shared/_LayoutNGO.cshtml";
+}
+
+<title>Inventory Disbursement System</title>
+
+@if (Model == null)
+{
+    <p style="color:red;">Model is NULL</p>
+}
+else
+{
+    <p style="color:green;">Model has @Model.Count items</p>
+
+}
+
+<script>
+    let inventory = @Html.Raw(
+        Newtonsoft.Json.JsonConvert.SerializeObject(
+            (Model ?? new List<NGO_Project.InventoryItem>()).Select(i => new {
+                id = i?.Id ?? 0,
+                itemName = i?.ItemName ?? "",
+                category = i?.Category?.CategoryName ?? "",
+                quantity = i?.Quantity ?? 0,
+                unit = i?.Unit ?? "",
+                qualityCheck = i?.QualityCheckStatus ?? false,
+                expiration = (i?.ExpirationDate != null)
+                    ? i.ExpirationDate.Value.ToString("yyyy-MM-dd")
+                    : "",
+                lastUpdated = (i?.LastUpdated != null)
+                    ? i.LastUpdated.Value.ToString("yyyy-MM-dd")
+                    : ""
+            })
+        )
+    );
+</script>
+
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+    .icon {
+        display: inline;
+        width: 1rem;
+        height: 1rem;
+        margin-right: 0.5rem;
+        vertical-align: middle;
+    }
+
+    @@media print {
+        .receipt-modal, .receipt-modal * {
+            visibility: visible;
+        }
+
+        .receipt-modal {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+        }
+    }
+</style>
+
+<div id="app" class="max-w-7xl mx-auto p-6 min-h-screen">
+    <div class="bg-white rounded-lg shadow-sm mb-6 p-4">
+        <h1 class="text-2xl font-bold text-gray-800 mb-4">Inventory Disbursement System</h1>
+
+        <div class="flex space-x-2">
+            <button id="disbursement-tab" class="px-4 py-2 rounded-lg bg-blue-600 text-white">
+                <i data-lucide="package" class="icon"></i>
+                Disbursement
+            </button>
+            <button id="requests-tab" class="px-4 py-2 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300">
+                <i data-lucide="send" class="icon"></i>
+                Aid Requests (<span id="request-count">0</span>)
+            </button>
+        </div>
+    </div>
+
+    <div id="disbursement-view">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-2 bg-white rounded-lg shadow-sm p-4">
+                <h2 class="text-lg font-semibold mb-4">Current Inventory</h2>
+
+                <div class="relative mb-4">
+                    <i data-lucide="search" class="absolute left-3 top-3 w-4 h-4 text-gray-400"></i>
+                    <input type="text"
+                           id="search-input"
+                           placeholder="Search items, category, size..."
+                           class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                </div>
+
+                <div id="inventory-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-96 overflow-y-auto">
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm p-4">
+                <h2 class="text-lg font-semibold mb-4">Selected Items</h2>
+
+                <div id="selected-items-list" class="mb-4 max-h-48 overflow-y-auto">
+                    <p class="text-gray-500 text-center py-4">No items selected</p>
+                </div>
+
+                <div class="mb-4">
+                    <h3 class="font-medium mb-2">Recipient Information</h3>
+                    <div class="space-y-2">
+                        <input type="text"
+                               id="recipient-name"
+                               placeholder="Full Name *"
+                               class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500" />
+                        <input type="text"
+                               id="recipient-id"
+                               placeholder="ID Number"
+                               class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500" />
+                        <input type="text"
+                               id="recipient-phone"
+                               placeholder="Phone Number"
+                               class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500" />
+                    </div>
+                </div>
+
+                <button id="process-disbursement-btn"
+                        class="w-full py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed font-medium"
+                        disabled>
+                    <i data-lucide="check-circle" class="icon"></i>
+                    Process Disbursement
+                </button>
+            </div>
+        </div>
+    </div>
+
+<div id="refuse-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+        <div class="text-center mb-4">
+            <i data-lucide="alert-circle" class="w-12 h-12 text-red-600 mx-auto mb-2"></i>
+            <h3 class="text-lg font-semibold text-red-700">Request Refused</h3>
+        </div>
+        <div id="refuse-modal-content" class="text-center mb-6">
+        </div>
+        <div class="flex space-x-3">
+            <button id="close-refuse-modal" class="flex-1 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400">
+                Close
+            </button>
+        </div>
+    </div>
+</div>
+
+<div id="request-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg p-6 max-w-lg w-full mx-4">
+        <div class="text-center mb-4">
+            <i data-lucide="send" class="w-12 h-12 text-blue-600 mx-auto mb-2"></i>
+            <h3 class="text-lg font-semibold">Generate Donation Request</h3>
+        </div>
+
+        <div class="mb-6">
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label for="request-category" class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                    <input type="text" id="request-category" class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500" />
+                </div>
+                <div>
+                    <label for="request-urgency" class="block text-sm font-medium text-gray-700 mb-1">Urgency</label>
+                    <select id="request-urgency" class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500">
+                        <option value="Low">Low</option>
+                        <option value="Medium">Medium</option>
+                        <option value="High">High</option>
+                        <option value="Critical">Critical</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label for="request-item" class="block text-sm font-medium text-gray-700 mb-1">Item & Size</label>
+                <input type="text" id="request-item" class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500" />
+            </div>
+
+            <div class="mb-4">
+                <label for="request-description" class="block text-sm font-medium text-gray-700 mb-1">Description/Reason</label>
+                <textarea id="request-description" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500" placeholder="Additional details about the donation request..."></textarea>
+            </div>
+        </div>
+
+        <div class="flex space-x-3">
+            <button id="post-request-btn" class="flex-1 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                <i data-lucide="send" class="icon"></i>
+                Post Now
+            </button>
+            <button id="save-draft-btn" class="flex-1 py-2 bg-orange-600 text-white rounded hover:bg-orange-700">
+                <i data-lucide="save" class="icon"></i>
+                Save as Draft
+            </button>
+            <button id="cancel-request-btn" class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400">
+                Cancel
+            </button>
+        </div>
+    </div>
+</div>
+
+<div id="receipt-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 receipt-modal">
+    <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+        <div class="text-center mb-4">
+            <i data-lucide="check-circle" class="w-12 h-12 text-green-600 mx-auto mb-2"></i>
+            <h3 class="text-lg font-semibold">Disbursement Complete</h3>
+        </div>
+
+        <div id="receipt-content" class="border-t border-b py-4 mb-4">
+        </div>
+
+        <div class="flex space-x-3 print:hidden">
+            <button id="print-receipt-btn" class="flex-1 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                <i data-lucide="file-text" class="icon"></i>
+                Print Receipt
+            </button>
+            <button id="close-receipt-modal" class="flex-1 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400">
+                Close
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Initialize Lucide icons
+    lucide.createIcons();
+
+    function renderInventory() {
+        let tableBody = document.getElementById("inventoryTableBody");
+        tableBody.innerHTML = "";
+
+        inventory.forEach(item => {
+            let row = `
+                <tr>
+                    <td>${item.category}</td>
+                    <td>${item.itemName}</td>
+                    <td>${item.quantity} ${item.unit || ""}</td>
+                    <td>${item.expiration || "-"}</td>
+                    <td>${item.qualityCheck ? "✅" : "❌"}</td>
+                </tr>
+            `;
+            tableBody.innerHTML += row;
+        });
+    }
+    let currentView = 'disbursement';
+    let searchTerm = '';
+    let selectedItems = [];
+    let recipientInfo = { name: '', id: '', phone: '' };
+    let refusedRequests = {};
+    let draftRequests = [];
+    let postedRequests = [];
+    let receipt = null;
+    let refuseModalData = null;
+    let requestModalData = null;
+
+    // DOM Elements
+    const disbursementTab = document.getElementById('disbursement-tab');
+    const requestsTab = document.getElementById('requests-tab');
+    const disbursementView = document.getElementById('disbursement-view');
+    const requestsView = document.getElementById('requests-view');
+    const searchInput = document.getElementById('search-input');
+    const inventoryGrid = document.getElementById('inventory-grid');
+    const selectedItemsList = document.getElementById('selected-items-list');
+    const recipientNameInput = document.getElementById('recipient-name');
+    const recipientIdInput = document.getElementById('recipient-id');
+    const recipientPhoneInput = document.getElementById('recipient-phone');
+    const processDisbursementBtn = document.getElementById('process-disbursement-btn');
+    const requestCountSpan = document.getElementById('request-count');
+    const draftCountSpan = document.getElementById('draft-count');
+    const postedCountSpan = document.getElementById('posted-count');
+    const draftRequestsList = document.getElementById('draft-requests-list');
+    const postedRequestsList = document.getElementById('posted-requests-list');
+    const refuseModal = document.getElementById('refuse-modal');
+    const refuseModalContent = document.getElementById('refuse-modal-content');
+    const closeRefuseModalBtn = document.getElementById('close-refuse-modal');
+    const requestModal = document.getElementById('request-modal');
+    const requestCategoryInput = document.getElementById('request-category');
+    const requestUrgencySelect = document.getElementById('request-urgency');
+    const requestItemInput = document.getElementById('request-item');
+    const requestDescriptionTextarea = document.getElementById('request-description');
+    const postRequestBtn = document.getElementById('post-request-btn');
+    const saveDraftBtn = document.getElementById('save-draft-btn');
+    const cancelRequestBtn = document.getElementById('cancel-request-btn');
+    const receiptModal = document.getElementById('receipt-modal');
+    const receiptContent = document.getElementById('receipt-content');
+    const printReceiptBtn = document.getElementById('print-receipt-btn');
+    const closeReceiptModalBtn = document.getElementById('close-receipt-modal');
+
+    // Render Functions
+    const renderInventory = () => {
+        const filteredInventory = inventory.filter(item =>
+            item.item.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            item.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            item.size.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+
+        inventoryGrid.innerHTML = filteredInventory.map(item => {
+            const isOutOfStock = item.quantity === 0;
+            const refusalCount = refusedRequests[`${item.category}-${item.item}-${item.size}`] || 0;
+            return `
+                            <div class="border rounded-lg p-4 ${isOutOfStock ? 'border-red-200 bg-red-50' : 'border-gray-200'}">
+                                <div class="flex justify-between items-start mb-2">
+                                    <div>
+                                        <span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">${item.category}</span>
+                                        <h3 class="font-medium text-gray-800 mt-1">${item.item}</h3>
+                                        <p class="text-sm text-gray-600">Size: ${item.size} | Location: ${item.location}</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <span class="text-lg font-bold ${isOutOfStock ? 'text-red-600' : 'text-green-600'}">
+                                            ${item.quantity}
+                                        </span>
+                                    </div>
+                                </div>
+                                ${item.quantity > 0 ? `
+                                    <div class="flex items-center space-x-2">
+                                        <input type="number" placeholder="Qty" min="1" max="${item.quantity}"
+                                               class="item-qty w-16 px-2 py-1 border border-gray-300 rounded text-sm" />
+                                        <button data-id="${item.id}" class="add-to-selection-btn px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">
+                                            Add
+                                        </button>
+                                    </div>
+                                ` : `
+                                    <div class="flex items-center space-x-2">
+                                        <i data-lucide="alert-circle" class="w-4 h-4 text-red-500"></i>
+                                        <span class="text-sm text-red-600">Out of Stock</span>
+                                        <button data-id="${item.id}" data-reason="Item out of stock" class="refuse-btn px-2 py-1 bg-red-100 text-red-700 rounded text-xs hover:bg-red-200">
+                                            Refuse (${refusalCount}/5)
+                                        </button>
+                                    </div>
+                                `}
+                                <div class="mt-2 pt-2 border-t border-gray-100">
+                                    <button data-id="${item.id}" data-reason="Request refused by staff" class="refuse-btn w-full px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs hover:bg-gray-200">
+                                        Refuse Request
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+        }).join('');
+
+        // Re-create icons after innerHTML update
+        lucide.createIcons();
+        addInventoryEventListeners();
+    };
+
+    const renderSelectedItems = () => {
+        if (selectedItems.length === 0) {
+            selectedItemsList.innerHTML = `<p class="text-gray-500 text-center py-4">No items selected</p>`;
+        } else {
+            selectedItemsList.innerHTML = selectedItems.map(item => `
+                            <div class="flex justify-between items-center py-2 border-b">
+                                <div>
+                                    <p class="font-medium text-sm">${item.item}</p>
+                                    <p class="text-xs text-gray-500">${item.size} | Qty: ${item.requestedQty}</p>
+                                </div>
+                                <button data-id="${item.id}" class="remove-from-selection-btn text-red-500 hover:text-red-700">
+                                    <i data-lucide="x" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        `).join('');
+        }
+        lucide.createIcons();
+        processDisbursementBtn.disabled = selectedItems.length === 0 || !recipientInfo.name;
+    };
+
+    const renderRequests = () => {
+        const updateCount = () => {
+            requestCountSpan.textContent = draftRequests.length + postedRequests.length;
+            draftCountSpan.textContent = draftRequests.length;
+            postedCountSpan.textContent = postedRequests.length;
+        };
+
+        const renderDrafts = () => {
+            if (draftRequests.length === 0) {
+                draftRequestsList.innerHTML = `<p class="text-gray-500 text-center py-8">No draft requests</p>`;
+            } else {
+                draftRequestsList.innerHTML = draftRequests.map(request => `
+                                <div class="border border-orange-200 rounded-lg p-3 bg-orange-50">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <div>
+                                            <span class="text-xs bg-orange-200 text-orange-800 px-2 py-1 rounded">${request.urgency}</span>
+                                            <h3 class="font-medium mt-1">${request.item} (${request.size})</h3>
+                                            <p class="text-sm text-gray-600">${request.category}</p>
+                                            <p class="text-xs text-gray-500 mt-1">${request.reason}</p>
+                                        </div>
+                                        <div class="flex space-x-1">
+                                            <button data-id="${request.id}" class="post-request-action px-2 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700">
+                                                <i data-lucide="send" class="w-3 h-3"></i>
+                                            </button>
+                                            <button data-id="${request.id}" class="delete-request-action px-2 py-1 bg-red-600 text-white rounded text-xs hover:bg-red-700">
+                                                <i data-lucide="trash-2" class="w-3 h-3"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <p class="text-xs text-gray-500">Created: ${request.createdAt}</p>
+                                </div>
+                            `).join('');
+            }
+        };
+
+        const renderPosted = () => {
+            if (postedRequests.length === 0) {
+                postedRequestsList.innerHTML = `<p class="text-gray-500 text-center py-8">No posted requests</p>`;
+            } else {
+                postedRequestsList.innerHTML = postedRequests.map(request => `
+                                <div class="border border-green-200 rounded-lg p-3 bg-green-50">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <div>
+                                            <span class="text-xs bg-green-200 text-green-800 px-2 py-1 rounded">Posted</span>
+                                            <h3 class="font-medium mt-1">${request.item} (${request.size})</h3>
+                                            <p class="text-sm text-gray-600">${request.category}</p>
+                                            <p class="text-xs text-gray-500 mt-1">${request.reason}</p>
+                                        </div>
+                                        <button data-id="${request.id}" class="delete-posted-request-action px-2 py-1 bg-red-600 text-white rounded text-xs hover:bg-red-700">
+                                            <i data-lucide="trash-2" class="w-3 h-3"></i>
+                                        </button>
+                                    </div>
+                                    <p class="text-xs text-gray-500">Posted: ${request.postedAt}</p>
+                                </div>
+                            `).join('');
+            }
+        };
+
+        updateCount();
+        renderDrafts();
+        renderPosted();
+        lucide.createIcons();
+        addRequestEventListeners();
+    };
+
+    const showModal = (modalElement) => modalElement.classList.remove('hidden');
+    const hideModal = (modalElement) => modalElement.classList.add('hidden');
+
+    const showRefuseModal = (item, count, reason) => {
+        refuseModalData = { item, count, reason };
+        refuseModalContent.innerHTML = `
+                        <p class="text-gray-700 mb-2">
+                            <strong>${item.item}</strong> (${item.size})
+                        </p>
+                        <p class="text-sm text-gray-600 mb-2">${reason}</p>
+                        <p class="text-sm text-gray-500">
+                            This is refusal #${count} for this item
+                        </p>
+                        ${count >= 5 ? `
+                            <div class="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded">
+                                <p class="text-sm text-yellow-800">
+                                    ⚠️ This item has been refused 5 times. A donation request will be generated.
+                                </p>
+                            </div>
+                        ` : ''}
+                    `;
+        lucide.createIcons();
+        showModal(refuseModal);
+    };
+
+    const showRequestModal = (request) => {
+        requestModalData = request;
+        requestCategoryInput.value = request.category;
+        requestUrgencySelect.value = request.urgency;
+        requestItemInput.value = `${request.item} (${request.size})`;
+        requestDescriptionTextarea.value = request.description;
+        showModal(requestModal);
+    };
+
+    const showReceiptModal = (newReceipt) => {
+        receipt = newReceipt;
+        receiptContent.innerHTML = `
+                        <h4 class="font-medium mb-2">Receipt #${receipt.id}</h4>
+                        <p class="text-sm text-gray-600 mb-2">Date: ${receipt.date}</p>
+                        <p class="text-sm text-gray-600 mb-2">Recipient: ${receipt.recipient.name}</p>
+                        ${receipt.recipient.id ? `<p class="text-sm text-gray-600 mb-2">ID: ${receipt.recipient.id}</p>` : ''}
+                        ${receipt.recipient.phone ? `<p class="text-sm text-gray-600 mb-4">Phone: ${receipt.recipient.phone}</p>` : ''}
+
+                        <div class="space-y-2">
+                            <p class="font-medium text-sm">Items Disbursed:</p>
+                            ${receipt.items.map(item => `
+                                <div class="flex justify-between text-sm">
+                                    <span>${item.item} (${item.size})</span>
+                                    <span>x${item.requestedQty}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+        lucide.createIcons();
+        showModal(receiptModal);
+    };
+
+    // Event Handlers
+    const switchView = (view) => {
+        currentView = view;
+        disbursementTab.classList.toggle('bg-blue-600', view === 'disbursement');
+        disbursementTab.classList.toggle('text-white', view === 'disbursement');
+        disbursementTab.classList.toggle('bg-gray-200', view !== 'disbursement');
+        disbursementTab.classList.toggle('text-gray-700', view !== 'disbursement');
+
+        requestsTab.classList.toggle('bg-blue-600', view === 'requests');
+        requestsTab.classList.toggle('text-white', view === 'requests');
+        requestsTab.classList.toggle('bg-gray-200', view !== 'requests');
+        requestsTab.classList.toggle('text-gray-700', view !== 'requests');
+
+        disbursementView.classList.toggle('hidden', view !== 'disbursement');
+        requestsView.classList.toggle('hidden', view !== 'requests');
+    };
+
+    const addToSelection = (item, requestedQty) => {
+        if (item.quantity === 0) {
+            handleRefusedRequest(item);
+            return;
+        }
+
+        const qty = Math.min(requestedQty, item.quantity);
+        const existingIndex = selectedItems.findIndex(selected => selected.id === item.id);
+
+        if (existingIndex > -1) {
+            const updatedQty = Math.min(selectedItems[existingIndex].requestedQty + qty, item.quantity);
+            selectedItems[existingIndex].requestedQty = updatedQty;
+        } else {
+            selectedItems.push({ ...item, requestedQty: qty });
+        }
+
+        renderSelectedItems();
+    };
+
+    const removeFromSelection = (itemId) => {
+        selectedItems = selectedItems.filter(item => item.id !== itemId);
+        renderSelectedItems();
+    };
+
+    const handleRefusedRequest = (item, reason = 'Item not available') => {
+        const key = `${item.category}-${item.item}-${item.size}`;
+        refusedRequests[key] = (refusedRequests[key] || 0) + 1;
+
+        showRefuseModal(item, refusedRequests[key], reason);
+
+        if (refusedRequests[key] >= 5) {
+            // Auto-trigger donation request after showing refuse modal
+            setTimeout(() => {
+                generateDonationRequest(item, 'Multiple unfulfilled requests (5+ times)');
+                refusedRequests[key] = 0;
+            }, 100);
+        }
+        renderInventory();
+    };
+
+    const generateDonationRequest = (item, reason) => {
+        const request = {
+            id: Date.now(),
+            category: item.category,
+            item: item.item,
+            size: item.size,
+            urgency: 'High',
+            reason: reason,
+            description: `Request for ${item.item} (${item.size}) in ${item.category} category`,
+            createdAt: new Date().toLocaleString(),
+            status: 'draft'
+        };
+        showRequestModal(request);
+    };
+
+    const handleRequestAction = (action) => {
+        const finalRequest = {
+            id: requestModalData.id,
+            category: requestCategoryInput.value,
+            item: requestItemInput.value.split('(')[0].trim(),
+            size: requestItemInput.value.split('(')[1].replace(')', '').trim(),
+            urgency: requestUrgencySelect.value,
+            reason: requestModalData.reason,
+            description: requestDescriptionTextarea.value,
+            createdAt: requestModalData.createdAt,
+        };
+
+        if (action === 'post') {
+            postedRequests.push({ ...finalRequest, status: 'posted', postedAt: new Date().toLocaleString() });
+        } else if (action === 'draft') {
+            draftRequests.push(finalRequest);
+        }
+
+        hideModal(requestModal);
+        renderRequests();
+    };
+
+    const processDisbursement = () => {
+        if (selectedItems.length === 0 || !recipientInfo.name) return;
+
+        // Update inventory
+        inventory = inventory.map(item => {
+            const selected = selectedItems.find(s => s.id === item.id);
+            if (selected) {
+                return { ...item, quantity: item.quantity - selected.requestedQty };
+            }
+            return item;
+        });
+
+        // Generate receipt
+        const newReceipt = {
+            id: `RCP-${Date.now()}`,
+            recipient: recipientInfo,
+            items: selectedItems,
+            date: new Date().toLocaleString(),
+            staff: 'Current User'
+        };
+
+        showReceiptModal(newReceipt);
+
+        // Reset form
+        selectedItems = [];
+        recipientInfo = { name: '', id: '', phone: '' };
+        recipientNameInput.value = '';
+        recipientIdInput.value = '';
+        recipientPhoneInput.value = '';
+
+        renderInventory();
+        renderSelectedItems();
+    };
+
+    const postRequest = (requestId) => {
+        const requestIndex = draftRequests.findIndex(r => r.id === requestId);
+        if (requestIndex > -1) {
+            const request = draftRequests.splice(requestIndex, 1)[0];
+            postedRequests.push({ ...request, status: 'posted', postedAt: new Date().toLocaleString() });
+            renderRequests();
+        }
+    };
+
+    const deleteRequest = (requestId, isDraft) => {
+        if (isDraft) {
+            draftRequests = draftRequests.filter(r => r.id !== requestId);
+        } else {
+            postedRequests = postedRequests.filter(r => r.id !== requestId);
+        }
+        renderRequests();
+    };
+
+    // Event Listeners Setup
+    const addInventoryEventListeners = () => {
+        document.querySelectorAll('.add-to-selection-btn').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const id = parseInt(e.currentTarget.dataset.id);
+                const item = inventory.find(i => i.id === id);
+                const qtyInput = e.currentTarget.previousElementSibling;
+                const qty = parseInt(qtyInput.value) || 1;
+                addToSelection(item, qty);
+                qtyInput.value = '';
+            });
+        });
+        document.querySelectorAll('.item-qty').forEach(input => {
+            input.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    const id = parseInt(e.currentTarget.parentNode.querySelector('.add-to-selection-btn').dataset.id);
+                    const item = inventory.find(i => i.id === id);
+                    const qty = parseInt(e.currentTarget.value) || 1;
+                    addToSelection(item, qty);
+                    e.currentTarget.value = '';
+                }
+            });
+        });
+        document.querySelectorAll('.refuse-btn').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const id = parseInt(e.currentTarget.dataset.id);
+                const item = inventory.find(i => i.id === id);
+                const reason = e.currentTarget.dataset.reason;
+                handleRefusedRequest(item, reason);
+            });
+        });
+    };
+
+    const addRequestEventListeners = () => {
+        document.querySelectorAll('.post-request-action').forEach(button => {
+            button.addEventListener('click', (e) => postRequest(parseInt(e.currentTarget.dataset.id)));
+        });
+        document.querySelectorAll('.delete-request-action').forEach(button => {
+            button.addEventListener('click', (e) => deleteRequest(parseInt(e.currentTarget.dataset.id), true));
+        });
+        document.querySelectorAll('.delete-posted-request-action').forEach(button => {
+            button.addEventListener('click', (e) => deleteRequest(parseInt(e.currentTarget.dataset.id), false));
+        });
+    };
+
+    // Initial render and event listeners
+    document.addEventListener('DOMContentLoaded', () => {
+        renderInventory();
+        renderSelectedItems();
+        renderRequests();
+
+        disbursementTab.addEventListener('click', () => switchView('disbursement'));
+        requestsTab.addEventListener('click', () => switchView('requests'));
+
+        searchInput.addEventListener('input', (e) => {
+            searchTerm = e.target.value;
+            renderInventory();
+        });
+
+        selectedItemsList.addEventListener('click', (e) => {
+            if (e.target.closest('.remove-from-selection-btn')) {
+                const id = parseInt(e.target.closest('.remove-from-selection-btn').dataset.id);
+                removeFromSelection(id);
+            }
+        });
+
+        recipientNameInput.addEventListener('input', (e) => {
+            recipientInfo.name = e.target.value;
+            processDisbursementBtn.disabled = selectedItems.length === 0 || !recipientInfo.name;
+        });
+        recipientIdInput.addEventListener('input', (e) => recipientInfo.id = e.target.value);
+        recipientPhoneInput.addEventListener('input', (e) => recipientInfo.phone = e.target.value);
+
+        processDisbursementBtn.addEventListener('click', processDisbursement);
+
+        closeRefuseModalBtn.addEventListener('click', () => {
+            hideModal(refuseModal);
+            renderInventory();
+        });
+
+        postRequestBtn.addEventListener('click', () => handleRequestAction('post'));
+        saveDraftBtn.addEventListener('click', () => handleRequestAction('draft'));
+        cancelRequestBtn.addEventListener('click', () => hideModal(requestModal));
+
+        printReceiptBtn.addEventListener('click', () => window.print());
+        closeReceiptModalBtn.addEventListener('click', () => hideModal(receiptModal));
+    });
+
+</script>

@@ -1,0 +1,162 @@
+﻿@model IEnumerable<NGO_Project.AidRequest>
+
+@{
+    Layout = "~/Views/Shared/_LayoutNGO.cshtml";
+}
+
+<div class="tab-content">
+    <div style="display: flex; justify-content: flex-end; margin-bottom: 18px;">
+        <button id="openFeedModalBtn"
+                style="background: #111827; color: #fff; border: none; border-radius: 8px; padding: 10px 22px; font-size: 1rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+            <span style="font-size:1.1rem;">&#128393;</span> Post New Request
+        </button>
+    </div>
+    <div style="font-size: 2rem; font-weight: 700; margin-bottom: 18px; color: #111827;">Public Aid Feed Management</div>
+    <div style="background: #fff; border-radius: 10px; border: 1.5px solid #e5e7eb; padding: 24px 24px 18px 24px; margin-bottom: 28px;">
+        <div style="font-size: 1.25rem; font-weight: 700; margin-bottom: 4px; color: #111827;">Your Active Feed Posts</div>
+        <div style="color: #6b7280; font-size: 1.05rem; margin-bottom: 18px;">Manage your organization's public aid requests</div>
+
+        @if (!Model.Any())
+        {
+            <div style="color: #6b7280; text-align: center; padding: 20px;">No active aid requests found. Post a new request to get started!</div>
+        }
+        else
+        {
+            foreach (var item in Model)
+            {
+                <div style="background: #fff; border-radius: 8px; border: 1.5px solid #e5e7eb; padding: 18px 18px 12px 18px; position: relative; margin-bottom: 10px;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <div>
+                            <div style="font-size: 1.1rem; font-weight: 700; color: #111827; margin-bottom: 2px;">@item.RequestTitle</div>
+                            <div style="color: #374151; font-size: 1.01rem; margin-bottom: 10px;">@item.Description</div>
+                            <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; align-items: center;">
+                                @if (item.UrgencyLevel == "High Priority")
+                                {
+                                    <span style="background: #fee2e2; color: #b91c1c; border-radius: 8px; padding: 4px 12px; font-size: 0.95rem; font-weight: 600;">@item.UrgencyLevel</span>
+                                }
+                                else
+                                {
+                                    <span style="background: #f3f4f6; color: #374151; border-radius: 8px; padding: 4px 12px; font-size: 0.95rem; font-weight: 600;">@item.UrgencyLevel</span>
+                                }
+
+                                <span style="background: #e0e7ff; color: #3730a3; border-radius: 8px; padding: 4px 12px; font-size: 0.95rem; font-weight: 500;">@item.Category.CategoryName</span>
+                                <span style="background: #f3f4f6; color: #374151; border-radius: 8px; padding: 4px 12px; font-size: 0.95rem; display: flex; align-items: center; gap: 4px; font-weight: 500;">
+                                    <span style="color:#ec4899; font-size:1.1em;">&#128205;</span> @item.Location
+                                </span>
+                            </div>
+
+                            <div style="font-weight: 600; font-size: 1.05rem; margin-bottom: 6px;">Items Needed:</div>
+                            <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px;">
+                                @if (item.RequestedItems != null)
+                                {
+                                    foreach (var requestedItem in item.RequestedItems)
+                                    {
+                                        <span style="background: #f3f4f6; color: #374151; border-radius: 16px; padding: 5px 14px; font-size: 0.98rem;">@requestedItem.ItemName</span>
+                                    }
+                                }
+                            </div>
+                            <div style="color: #6b7280; font-size: 0.98rem; margin-top: 8px;">Posted on: @item.PostDate</div>
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                            <button class="editBtn" data-id="@item.RequestId" data-title="@item.RequestTitle"
+                                    data-category="@item.CategoryId" data-urgency="@item.UrgencyLevel"
+                                    data-location="@item.Location" data-items="@string.Join(", ", item.RequestedItems.Select(r => r.ItemName))"
+                                    data-description="@item.Description"
+                                    style="background: #f3f4f6; border: none; border-radius: 6px; padding: 8px; cursor: pointer;">
+                                <span style="font-size: 1.1rem; color: #374151;">&#9998;</span>
+                            </button>
+                            <button style="background: #f3f4f6; border: none; border-radius: 6px; padding: 8px; cursor: pointer;">
+                                <span style="font-size: 1.1rem; color: #b91c1c;">&#128465;</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+
+    <div class="modal-bg" id="feedModalBg" style="display:none;">
+        <div class="modal-content">
+            <h2 id="modalTitle">Post New Aid Request to Public Feed</h2>
+            <p id="modalSubtitle">Create a public request that donors can see and respond to</p>
+
+            @using (Html.BeginForm("Create", "AidRequests", FormMethod.Post, new { id = "aidForm" }))
+            {
+                @Html.AntiForgeryToken()
+                @Html.Hidden("RequestId", null, new { id = "RequestId" })
+                <div class="modal-form-row">
+                    <div class="modal-form-group">
+                        <label for="requestTitle">Request Title</label>
+                        @Html.TextBox("RequestTitle", null, new { @id = "requestTitle", @placeholder = "Emergency relief for..." })
+                    </div>
+                    <div class="modal-form-group">
+                        <label for="category">Category</label>
+                        @Html.DropDownList("CategoryId", (SelectList)ViewBag.Categories, "Select category", new { @id = "categoryid", @class = "form-control searchable" })
+                    </div>
+                </div>
+                <div class="modal-form-row">
+                    <div class="modal-form-group">
+                        <label for="urgency">Urgency Level</label>
+                        @Html.DropDownList("UrgencyLevel", new SelectList(new List<string> { "High Priority", "Medium Priority", "Low Priority" }), "Select urgency", new { @id = "urgency" })
+                    </div>
+                    <div class="modal-form-group">
+                        <label for="location">Request Location (Optional)</label>
+                        @Html.TextBox("Location", null, new { @id = "location", @placeholder = "Karachi, Sindh" })
+                    </div>
+                </div>
+                <div class="modal-form-group" style="margin-bottom: 16px;">
+                    <label for="itemsNeeded">Items Needed (comma separated)</label>
+                    @Html.TextBox("itemsNeeded", null, new { @id = "itemsNeeded", @placeholder = "Rice, Flour, Blankets, Medicine..." })
+                </div>
+                <div class="modal-form-group">
+                    <label for="description">Description</label>
+                    @Html.TextArea("Description", null, new { @id = "description", @placeholder = "Detailed description of the aid needed..." })
+                </div>
+                <div class="modal-form-actions">
+                    <button type="submit" class="primary">Save</button>
+                    <button type="button" class="secondary" id="cancelFeedModalBtn">Cancel</button>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+    const modalBg = document.getElementById('feedModalBg');
+    const openBtn = document.getElementById('openFeedModalBtn');
+    const cancelBtn = document.getElementById('cancelFeedModalBtn');
+    const form = document.getElementById('aidForm');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalSubtitle = document.getElementById('modalSubtitle');
+
+    openBtn.addEventListener('click', () => {
+        form.action = '@Url.Action("Create", "AidRequests")';
+        form.reset();
+        document.getElementById('RequestId').value = "";
+        modalTitle.innerText = "Post New Aid Request to Public Feed";
+        modalSubtitle.innerText = "Create a public request that donors can see and respond to";
+        modalBg.style.display = 'flex';
+    });
+
+    cancelBtn.addEventListener('click', () => {
+        modalBg.style.display = 'none';
+    });
+
+    document.querySelectorAll('.editBtn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            form.action = '@Url.Action("Edit", "AidRequests")';
+            document.getElementById('RequestId').value = btn.dataset.id;
+            document.getElementById('requestTitle').value = btn.dataset.title;
+            document.getElementById('categoryid').value = btn.dataset.category;
+            document.getElementById('urgency').value = btn.dataset.urgency;
+            document.getElementById('location').value = btn.dataset.location;
+            document.getElementById('itemsNeeded').value = btn.dataset.items;
+            document.getElementById('description').value = btn.dataset.description;
+            modalTitle.innerText = "Edit Aid Request";
+            modalSubtitle.innerText = "Update the details for this aid request";
+            modalBg.style.display = 'flex';
+        });
+    });
+    </script>
+}

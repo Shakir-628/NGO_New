@@ -1,0 +1,103 @@
+﻿
+@model NGO_Project.DonationItem
+
+@{
+    Layout = "~/Views/Shared/_LayoutNGO.cshtml";
+}
+
+
+<div class="tab-content">
+    <div style="display: flex; justify-content: flex-end; margin-bottom: 18px;">
+        <button id="showAddItemFormBtn" style="background: #111827; color: #fff; border: none; border-radius: 8px; padding: 10px 22px; font-size: 1rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+            <span style="font-size:1.1rem;">&#128230;</span> Add Item
+        </button>
+    </div>
+    <div style="font-size: 2rem; font-weight: 700; margin-bottom: 18px; color: #111827;">Inventory Management</div>
+    <div style="display: flex; gap: 18px; margin-bottom: 24px; flex-wrap: wrap;">
+        <div style="background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); padding: 22px 28px 18px 28px; flex: 1 1 220px; min-width: 220px; max-width: 260px; border: 1.5px solid #e5e7eb;">
+            <div style="color: #374151; font-size: 1.05rem; font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">Total Items <span style='font-size:1.1rem; color:#6b7280;'>&#128230;</span></div>
+            <div style="font-size: 2rem; font-weight: 700; color: #1d4ed8; margin-bottom: 2px;">2</div>
+        </div>
+        <div style="background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); padding: 22px 28px 18px 28px; flex: 1 1 220px; min-width: 220px; max-width: 260px; border: 1.5px solid #e5e7eb;">
+            <div style="color: #374151; font-size: 1.05rem; font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">Available <span style='font-size:1.1rem; color:#16a34a;'>&#10003;</span></div>
+            <div style="font-size: 2rem; font-weight: 700; color: #1d4ed8; margin-bottom: 2px;">2</div>
+        </div>
+        <div style="background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); padding: 22px 28px 18px 28px; flex: 1 1 220px; min-width: 220px; max-width: 260px; border: 1.5px solid #e5e7eb;">
+            <div style="color: #374151; font-size: 1.05rem; font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">Low Stock Alert <span style='font-size:1.1rem; color:#f59e42;'>&#9888;</span></div>
+            <div style="font-size: 2rem; font-weight: 700; color: #1d4ed8; margin-bottom: 2px;">0</div>
+        </div>
+    </div>
+    <div id="addItemFormContainer" style="display:none; background: #fff; border-radius: 10px; border: 1.5px solid #e5e7eb; padding: 24px 24px 18px 24px; margin-bottom: 28px;">
+        <div style="font-size: 1.25rem; font-weight: 700; margin-bottom: 4px; color: #111827;">Add New Inventory Item</div>
+        <div style="color: #6b7280; font-size: 1.05rem; margin-bottom: 18px;">Record new donations received</div>
+        <form>
+            <div style="display: flex; gap: 18px; margin-bottom: 16px; flex-wrap: wrap;">
+                <div style="flex:1 1 220px; display:flex; flex-direction:column;">
+                    <label style="font-weight:600; font-size:1rem; margin-bottom:6px; color:#111827;">Item Name</label>
+                    <input type="text" placeholder="Rice bags, Medicine..." style="padding:10px 12px; border:1.5px solid #e5e7eb; border-radius:6px; font-size:1rem; background:#f9fafb;" />
+                </div>
+                <div style="flex:1 1 220px; display:flex; flex-direction:column;">
+                    <label style="font-weight:600; font-size:1rem; margin-bottom:6px; color:#111827;">Category</label>
+                    <input type="text" placeholder="Food, Healthcare, Clothing..." style="padding:10px 12px; border:1.5px solid #e5e7eb; border-radius:6px; font-size:1rem; background:#f9fafb;" />
+                </div>
+            </div>
+            <div style="display: flex; gap: 18px; margin-bottom: 16px; flex-wrap: wrap;">
+                <div style="flex:1 1 220px; display:flex; flex-direction:column;">
+                    <label style="font-weight:600; font-size:1rem; margin-bottom:6px; color:#111827;">Quantity</label>
+                    <input type="number" placeholder="50" style="padding:10px 12px; border:1.5px solid #e5e7eb; border-radius:6px; font-size:1rem; background:#f9fafb;" />
+                </div>
+                <div style="flex:1 1 220px; display:flex; flex-direction:column;">
+                    <label style="font-weight:600; font-size:1rem; margin-bottom:6px; color:#111827;">Unit</label>
+                    <input type="text" placeholder="bags, pieces, kits..." style="padding:10px 12px; border:1.5px solid #e5e7eb; border-radius:6px; font-size:1rem; background:#f9fafb;" />
+                </div>
+            </div>
+            <div style="display: flex; gap: 18px; margin-bottom: 16px; flex-wrap: wrap;">
+                <div style="flex:1 1 220px; display:flex; flex-direction:column;">
+                    <label style="font-weight:600; font-size:1rem; margin-bottom:6px; color:#111827;">Expiry Date (if applicable)</label>
+                    <input type="date" style="padding:10px 12px; border:1.5px solid #e5e7eb; border-radius:6px; font-size:1rem; background:#f9fafb;" />
+                </div>
+            </div>
+            <div style="margin-top: 18px; display: flex; gap: 12px;">
+                <button type="submit" style="font-size: 1rem; font-weight: 600; border-radius: 6px; padding: 10px 22px; border: none; cursor: pointer; background: #111827; color: #fff;">Add Item</button>
+                <button type="button" id="cancelAddItemFormBtn" style="font-size: 1rem; font-weight: 600; border-radius: 6px; padding: 10px 22px; border: 1.5px solid #e5e7eb; background: #fff; color: #111827;">Cancel</button>
+            </div>
+        </form>
+    </div>
+    <div style="background: #fff; border-radius: 10px; border: 1.5px solid #e5e7eb; padding: 24px 24px 18px 24px; margin-bottom: 28px;">
+        <div style="font-size: 1.25rem; font-weight: 700; margin-bottom: 4px; color: #111827;">Current Inventory</div>
+        <div style="color: #6b7280; font-size: 1.05rem; margin-bottom: 18px;">Track and manage your donation inventory</div>
+        <div style="overflow-x:auto;">
+            <table style="width:100%; border-collapse:collapse; font-size:1.05rem;">
+                <thead>
+                    <tr style="color:#6b7280; text-align:left; border-bottom:1.5px solid #e5e7eb;">
+                        <th style="padding:10px 8px; font-weight:600;">Item Name</th>
+                        <th style="padding:10px 8px; font-weight:600;">Category</th>
+                        <th style="padding:10px 8px; font-weight:600;">Quantity</th>
+                        <th style="padding:10px 8px; font-weight:600;">Unit</th>
+                        <th style="padding:10px 8px; font-weight:600;">Status</th>
+                        <th style="padding:10px 8px; font-weight:600;">Received Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="border-bottom:1px solid #f3f4f6;">
+                        <td style="padding:10px 8px; font-weight:600; color:#111827;">Rice Bags (50kg)</td>
+                        <td style="padding:10px 8px;">Food</td>
+                        <td style="padding:10px 8px;">45</td>
+                        <td style="padding:10px 8px;">bags</td>
+                        <td style="padding:10px 8px; color:#16a34a; font-weight:500;"><span style='font-size:1.1rem;'>&#10003;</span> Available</td>
+                        <td style="padding:10px 8px;">5/25/2025</td>
+                    </tr>
+                    <tr>
+                        <td style="padding:10px 8px; font-weight:600; color:#111827;">Medical Supplies Kit</td>
+                        <td style="padding:10px 8px;">Healthcare</td>
+                        <td style="padding:10px 8px;">12</td>
+                        <td style="padding:10px 8px;">kits</td>
+                        <td style="padding:10px 8px; color:#16a34a; font-weight:500;"><span style='font-size:1.1rem;'>&#10003;</span> Available</td>
+                        <td style="padding:10px 8px;">5/25/2025</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>

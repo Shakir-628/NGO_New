@@ -1,0 +1,236 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+
+    <style>
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="sidebar" data-background-color="dark">
+            <div class="sidebar-logo">
+                <div class="logo-header" data-background-color="dark">
+                    <a href="index.html" class="logo">
+                        <img src="~/assets/img/kaiadmin/logo_light.svg"
+                             alt="navbar brand"
+                             class="navbar-brand"
+                             height="20" />
+                    </a>
+                    <div class="nav-toggle">
+                        <button class="btn btn-toggle toggle-sidebar">
+                            <i class="gg-menu-right"></i>
+                        </button>
+                        <button class="btn btn-toggle sidenav-toggler">
+                            <i class="gg-menu-left"></i>
+                        </button>
+                    </div>
+                    <button class="topbar-toggler more">
+                        <i class="gg-more-vertical-alt"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="sidebar-wrapper scrollbar scrollbar-inner">
+                <div class="sidebar-content">
+                    <ul class="nav nav-secondary">
+                        <li class="nav-item active">
+                            <a data-bs-toggle="collapse"
+                               href="#dashboard"
+                               class="collapsed"
+                               aria-expanded="false">
+                                <i class="fas fa-home"></i>
+                                <p>Dashboard</p>
+                                <span class="caret"></span>
+                            </a>
+                            <div class="collapse" id="dashboard">
+                                <ul class="nav nav-collapse">
+                                    <li>
+                                        <a href="~/UserTypes/Index">
+                                            <span class="sub-item">User Types</span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </li>
+                        <li class="nav-section">
+                            <span class="sidebar-mini-icon">
+                                <i class="fa fa-ellipsis-h"></i>
+                            </span>
+                            <h4 class="text-section">Components</h4>
+                        </li>
+                        <li class="nav-item">
+                            <a data-bs-toggle="collapse" href="#base">
+                                <i class="fas fa-layer-group"></i>
+                                <p>Inventory</p>
+                                <span class="caret"></span>
+                            </a>
+                            <div class="collapse" id="base">
+                                <ul class="nav nav-collapse">
+                                    <li>
+                                        <a href="~/InventoryItems/Index">
+                                            <span class="sub-item">Items</span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </li>
+                        <li class="nav-item">
+                            <a data-bs-toggle="collapse" href="#forms">
+                                <i class="fas fa-pen-square"></i>
+                                <p>Aids</p>
+                                <span class="caret"></span>
+                            </a>
+                            <div class="collapse" id="forms">
+                                <ul class="nav nav-collapse">
+                                    <li>
+                                        <a href="~/AidRequests/Index">
+                                            <span class="sub-item">Aid Request</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="~/CashDonations/Index">
+                                            <span class="sub-item">Cash Donation</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="~/DistributionOrders/Index">
+                                            <span class="sub-item">Distribution Orders</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="~/Documents/Index">
+                                            <span class="sub-item">Documents</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="~/Donations/Index">
+                                            <span class="sub-item">Donation</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="~/DonationItems/Index">
+                                            <span class="sub-item">Donation Items</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="~/Donors/Index">
+                                            <span class="sub-item">Donor</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="~/RequestedItems/Index">
+                                            <span class="sub-item">Requested Items</span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="main-panel">
+            <div class="main-content-wrapper">
+                <div class="main-header">
+                    <div class="main-header-logo">
+                        <div class="logo-header" data-background-color="dark">
+                            <a href="index.html" class="logo">
+                                <img src="~/assets/img/kaiadmin/logo_light.svg"
+                                     alt="navbar brand"
+                                     class="navbar-brand"
+                                     height="20" />
+                            </a>
+                            <div class="nav-toggle">
+                                <button class="btn btn-toggle toggle-sidebar">
+                                    <i class="gg-menu-right"></i>
+                                </button>
+                                <button class="btn btn-toggle sidenav-toggler">
+                                    <i class="gg-menu-left"></i>
+                                </button>
+                            </div>
+                            <button class="topbar-toggler more">
+                                <i class="gg-more-vertical-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <nav class="navbar navbar-header navbar-header-transparent navbar-expand-lg border-bottom">
+                        <div class="container-fluid">
+                            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                                <span class="navbar-toggler-icon"></span>
+                            </button>
+                            <div class="collapse navbar-collapse" id="navbarNav">
+                                <ul class="navbar-nav topbar-nav ms-md-auto align-items-center">
+                                    <li class="nav-item topbar-icon dropdown hidden-caret d-flex d-lg-none">
+                                        <a class="nav-link dropdown-toggle"
+                                           data-bs-toggle="dropdown"
+                                           href="#"
+                                           role="button"
+                                           aria-expanded="false"
+                                           aria-haspopup="true">
+                                            <i class="fa fa-search"></i>
+                                        </a>
+                                        <ul class="dropdown-menu dropdown-search animated fadeIn">
+                                            <li>
+                                                <form class="navbar-left navbar-form nav-search">
+                                                    <div class="input-group">
+                                                        <input type="text"
+                                                               placeholder="Search ..."
+                                                               class="form-control" />
+                                                    </div>
+                                                </form>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li class="nav-item dropdown hidden-caret">
+                                        <a class="dropdown-toggle profile-pic" data-bs-toggle="dropdown" href="#" aria-expanded="false">
+                                            <div class="avatar-sm">
+                                                <img src="~/assets/img/profile.jpg" alt="..." class="avatar-img rounded-circle" />
+                                            </div>
+                                        </a>
+                                        <ul class="dropdown-menu dropdown-user animated fadeIn">
+                                            <li>
+                                                <div class="dropdown-user-scroll scrollbar-outer">
+                                                    <div class="user-box">
+                                                        <div class="avatar-lg">
+                                                            <img src="~/assets/img/profile.jpg"
+                                                                 alt="image profile"
+                                                                 class="avatar-img rounded" />
+                                                        </div>
+                                                        <div class="u-text">
+                                                            <h4>Hizrian</h4>
+                                                            <p class="text-muted">hello@example.com</p>
+                                                            <a href="profile.html"
+                                                               class="btn btn-xs btn-secondary btn-sm">View Profile</a>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </li>
+                                            <li>
+                                                <div class="dropdown-divider"></div>
+                                                <a class="dropdown-item" href="#">My Profile</a>
+                                                <a class="dropdown-item" href="#">My Balance</a>
+                                                <a class="dropdown-item" href="#">Inbox</a>
+                                                <div class="dropdown-divider"></div>
+                                                <a class="dropdown-item" href="#">Account Setting</a>
+                                                <div class="dropdown-divider"></div>
+                                                <a class="dropdown-item" href="#">Logout</a>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </nav>
+                </div>
+                <div class="container">
+                    <div class="page-inner">
+                        @RenderBody()
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
