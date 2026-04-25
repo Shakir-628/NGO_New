@@ -700,11 +700,10 @@
                                     // Step 2: Ask for next action only if it was an Add (not edit)
                                     swal({
                                         title: "Next Step",
-                                        text: "Would you like to print invoice or mark as anonymous donation?",
+                                        text: "Would you like to print invoice?",
                                         icon: "info",
                                         buttons: {
                                             cancel: { text: "Cancel", value: "cancel", visible: false },
-                                            anonymous: { text: "Anonymous Donation", value: "anonymous", className: "btn-warning" },
                                             invoice: { text: "Print Invoice", value: "invoice", className: "btn-success" }
                                         }
                                     }).then((value) => {
@@ -786,7 +785,13 @@
                         if (res.exists) {
                             $("#FullName").val(res.fullName);
                             $("#PhoneNumber").val(res.phoneNumber);
-                            swal("Returning Donor!", "We've matched this email and filled in the details.", "info");
+                            
+                            if (res.fullName === "Anonymous") {
+                                if (res.email) $("#Email").val(res.email);
+                                swal("Anonymous", "Recording this as an anonymous donation.", "info");
+                            } else {
+                                swal("Returning Donor!", "We've matched this email and filled in the details.", "info");
+                            }
                         }
                     });
                 }

@@ -137,18 +137,34 @@ namespace NGO_Project.Controllers
         [HttpGet]
         public JsonResult CheckExistingDonor(string email)
         {
-            var donor = db.Donors.FirstOrDefault(d => d.Email == email);
-            if (donor != null)
+            // Check Users table ONLY
+            var user = db.Users.FirstOrDefault(u => u.Email == email && u.Email != "");
+            if (user != null)
             {
                 return Json(new
                 {
                     success = true,
                     exists = true,
-                    fullName = donor.FullName,
-                    phoneNumber = donor.PhoneNumber
+                    fullName = (user.FirstName + " " + user.LastName).Trim(),
+                    phoneNumber = user.PhoneNumber
                 }, JsonRequestBehavior.AllowGet);
             }
-            return Json(new { success = true, exists = false }, JsonRequestBehavior.AllowGet);
+
+            // If information does not exist in Users table, fetch the default Anonymous user record
+            var anonymousUser = db.Users.FirstOrDefault(u => u.Username == "Anonymous");
+            if (anonymousUser != null)
+            {
+                return Json(new
+                {
+                    success = true,
+                    exists = true,
+                    fullName = anonymousUser.FirstName.Trim(),
+                    phoneNumber = anonymousUser.PhoneNumber,
+                    email = anonymousUser.Email // Returning this to potentially update the UI
+                }, JsonRequestBehavior.AllowGet);
+            }
+
+            return Json(new { success = false, message = "Anonymous record not found." }, JsonRequestBehavior.AllowGet);
         }
 
         // GET: Donors/Edit/5
