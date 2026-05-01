@@ -17,19 +17,20 @@ namespace NGO_Project.Controllers
         // GET: InventoryItems
         public ActionResult Index()
         {
-            var totalItems = db.InventoryItems.Count();
+            var currentUserId = Convert.ToInt32(Session["UserId"]);
 
             var viewModel = new InventoryDashboardViewModel
             {
                 NewItem = new InventoryItem(),
 
-                // Group identical items and sum their quantity
+                // Group identical items and sum their quantity for the current user
                 InventoryItems = db.InventoryItems
+                                  .Where(i => i.CreatedBy == currentUserId)
                                   .GroupBy(i => i.ItemId)
                                   .ToList()
                                   .Select(g => new InventoryItem
                                   {
-                                      Id = g.First().Id,
+                                      InventoryId = g.First().InventoryId,
                                       ItemId = g.Key,
                                       Quantity = g.Sum(x => x.Quantity),
                                       ExpirationDate = g.Max(x => x.ExpirationDate),
@@ -37,7 +38,7 @@ namespace NGO_Project.Controllers
                                       QualityCheckStatus = g.First().QualityCheckStatus,
                                       ItemMaster = g.First().ItemMaster
                                   })
-                                  .OrderByDescending(i => i.Id)
+                                  .OrderByDescending(i => i.InventoryId)
                                   .ToList(),
             };
 
@@ -57,7 +58,7 @@ namespace NGO_Project.Controllers
 
             ViewBag.ItemMasters = new SelectList(
                 db.ItemMasters.OrderBy(x => x.ItemName),
-                "Id", "ItemName"
+                "ItemId", "ItemName"
             );
 
             ViewBag.ItemMastersList = db.ItemMasters
@@ -72,6 +73,49 @@ namespace NGO_Project.Controllers
             return View(viewModel);
         }
 
+        [HttpPost]
+        public JsonResult CreateBatch(List<InventoryItem> items)
+        {
+            if (items == null || !items.Any())
+                return Json(new { success = false, message = "No items to add." });
+
+            var savedIds = new List<int>();
+            string lastCategory = "Donation";
+
+            foreach (var item in items)
+            {
+                item.LastUpdated = DateTime.Now;
+                var currentUserId = Convert.ToInt32(Session["UserId"]);
+                item.CreatedBy = currentUserId;
+
+                var existingBatch = db.InventoryItems.FirstOrDefault(i => i.ItemId == item.ItemId && i.CreatedBy == currentUserId);
+                if (existingBatch != null)
+                {
+                    existingBatch.Quantity += item.Quantity;
+                    existingBatch.ExpirationDate = item.ExpirationDate ?? existingBatch.ExpirationDate;
+                    existingBatch.QualityCheckStatus = null; // Reset to Pending on new donation
+                    existingBatch.LastUpdated = DateTime.Now;
+                    db.Entry(existingBatch).State = EntityState.Modified;
+                    db.SaveChanges();
+                    savedIds.Add(existingBatch.InventoryId);
+                    
+                    var itemInfo = db.ItemMasters.Include(im => im.Category).FirstOrDefault(im => im.ItemId == existingBatch.ItemId);
+                    lastCategory = itemInfo?.Category?.CategoryName ?? "Donation";
+                }
+                else
+                {
+                    db.InventoryItems.Add(item);
+                    db.SaveChanges();
+                    savedIds.Add(item.InventoryId);
+                    
+                    var itemInfo = db.ItemMasters.Include(im => im.Category).FirstOrDefault(im => im.ItemId == item.ItemId);
+                    lastCategory = itemInfo?.Category?.CategoryName ?? "Donation";
+                }
+            }
+
+            return Json(new { success = true, itemIds = savedIds, categoryName = lastCategory });
+        }
+
 
         // POST: InventoryItems/Create (for AJAX)
         [HttpPost]
@@ -82,10 +126,11 @@ namespace NGO_Project.Controllers
             {
                 if (Session["UserId"] != null && !string.IsNullOrEmpty(Session["UserId"].ToString()))
                 {
-                    viewModel.NewItem.LastUpdated = DateTime.Now;
+                    var currentUserId = Convert.ToInt32(Session["UserId"]);
+                    viewModel.NewItem.CreatedBy = currentUserId;
 
                     // Intercept duplicate creation and sum quantity dynamically
-                    var existingBatch = db.InventoryItems.FirstOrDefault(i => i.ItemId == viewModel.NewItem.ItemId);
+                    var existingBatch = db.InventoryItems.FirstOrDefault(i => i.ItemId == viewModel.NewItem.ItemId && i.CreatedBy == currentUserId);
                     if (existingBatch != null)
                     {
                         existingBatch.Quantity += viewModel.NewItem.Quantity;
@@ -93,8 +138,8 @@ namespace NGO_Project.Controllers
                         existingBatch.LastUpdated = DateTime.Now;
                         db.Entry(existingBatch).State = EntityState.Modified;
 
-                        // Sync Id for UI response
-                        viewModel.NewItem.Id = existingBatch.Id;
+                        // Sync InventoryId for UI response
+                        viewModel.NewItem.InventoryId = existingBatch.InventoryId;
                     }
                     else
                     {
@@ -107,7 +152,7 @@ namespace NGO_Project.Controllers
 
                     // ✅ Get Category name for modal
                     var categoryName = db.ItemMasters
-                                         .Where(i => i.Id == viewModel.NewItem.ItemId)
+                                         .Where(i => i.ItemId == viewModel.NewItem.ItemId)
                                          .Select(i => i.Category.CategoryName)
                                          .FirstOrDefault();
 
@@ -119,7 +164,7 @@ namespace NGO_Project.Controllers
                     return Json(new
                     {
                         success = true,
-                        itemId = viewModel.NewItem.Id,
+                        itemId = viewModel.NewItem.InventoryId,
                         categoryName = categoryName
                     });
                 }
@@ -161,6 +206,31 @@ namespace NGO_Project.Controllers
             return Json(new { success = true });
         }
 
+        [HttpGet]
+        public JsonResult GetInventoryItemAPI(int id)
+        {
+            var item = db.InventoryItems.Find(id);
+            if (item != null)
+            {
+                var categoryName = db.ItemMasters
+                                     .Where(i => i.ItemId == item.ItemId)
+                                     .Select(i => i.Category.CategoryName)
+                                     .FirstOrDefault();
+
+                return Json(new 
+                { 
+                    InventoryId = item.InventoryId, 
+                    item.ItemId, 
+                    item.Quantity, 
+                    ExpirationDate = item.ExpirationDate?.ToString("yyyy-MM-dd"), 
+                    item.QualityCheckStatus,
+                    CategoryName = categoryName,
+                    Unit = item.ItemMaster?.Unit
+                }, JsonRequestBehavior.AllowGet);
+            }
+            return Json(null, JsonRequestBehavior.AllowGet);
+        }
+
         // GET: InventoryItems/GetInventoryItems (Action for AJAX to refresh the table)
         public ActionResult GetInventoryItems()
         {
@@ -169,7 +239,7 @@ namespace NGO_Project.Controllers
                                    .ToList()
                                    .Select(g => new InventoryItem
                                    {
-                                       Id = g.First().Id,
+                                       InventoryId = g.First().InventoryId,
                                        ItemId = g.Key,
                                        Quantity = g.Sum(x => x.Quantity),
                                        ExpirationDate = g.Max(x => x.ExpirationDate),
@@ -177,7 +247,7 @@ namespace NGO_Project.Controllers
                                        QualityCheckStatus = g.First().QualityCheckStatus,
                                        ItemMaster = g.First().ItemMaster
                                    })
-                                   .OrderByDescending(i => i.Id)
+                                   .OrderByDescending(i => i.InventoryId)
                                    .ToList();
 
             return PartialView("_InventoryTableRows", inventoryItems);
@@ -186,7 +256,8 @@ namespace NGO_Project.Controllers
         // GET: InventoryItems/GetSummaryData (Action for AJAX to refresh summary cards)
         public ActionResult GetSummaryData()
         {
-            var inventoryItems = db.InventoryItems.ToList();
+            var currentUserId = Convert.ToInt32(Session["UserId"]);
+            var inventoryItems = db.InventoryItems.Where(i => i.CreatedBy == currentUserId).ToList();
             var total = inventoryItems.Count();
             var available = inventoryItems.Count(i => i.Quantity > 5);
             var lowStock = inventoryItems.Count(i => i.Quantity <= 5 && i.Quantity > 0);
@@ -203,26 +274,53 @@ namespace NGO_Project.Controllers
             InventoryItem inventoryItem = db.InventoryItems.Find(id);
             if (inventoryItem == null) return HttpNotFound();
 
-            ViewBag.ItemId = new SelectList(db.ItemMasters, "Id", "ItemName", inventoryItem.ItemId);
+            ViewBag.ItemId = new SelectList(db.ItemMasters, "ItemId", "ItemName", inventoryItem.ItemId);
             return View(inventoryItem);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit([Bind(Include = "Id,ItemId,Quantity,Unit,QualityCheckStatus,ExpirationDate,LastUpdated,CreatedBy")] InventoryItem inventoryItem)
+        public ActionResult Edit([Bind(Include = "InventoryId,ItemId,Quantity,Unit,QualityCheckStatus,ExpirationDate,LastUpdated,CreatedBy")] InventoryItem inventoryItem)
         {
             if (ModelState.IsValid)
             {
                 if (Session["UserId"] != null && !string.IsNullOrEmpty(Session["UserId"].ToString()))
                 {
-                    inventoryItem.LastUpdated = DateTime.Now;
-                    db.Entry(inventoryItem).State = EntityState.Modified;
+                    var currentUserId = Convert.ToInt32(Session["UserId"]);
+                    
+                    // Check if another record already exists for this ItemId and NGO
+                    var existingItem = db.InventoryItems.FirstOrDefault(i => 
+                        i.ItemId == inventoryItem.ItemId && 
+                        i.CreatedBy == currentUserId && 
+                        i.InventoryId != inventoryItem.InventoryId);
+
+                    if (existingItem != null)
+                    {
+                        // Merge current changes into the existing record
+                        existingItem.Quantity += inventoryItem.Quantity;
+                        existingItem.ExpirationDate = inventoryItem.ExpirationDate ?? existingItem.ExpirationDate;
+                        existingItem.QualityCheckStatus = inventoryItem.QualityCheckStatus;
+                        existingItem.LastUpdated = DateTime.Now;
+                        
+                        db.Entry(existingItem).State = EntityState.Modified;
+                        
+                        // Remove the redundant record being edited
+                        var itemToRemove = db.InventoryItems.Find(inventoryItem.InventoryId);
+                        if (itemToRemove != null) db.InventoryItems.Remove(itemToRemove);
+                    }
+                    else
+                    {
+                        inventoryItem.LastUpdated = DateTime.Now;
+                        inventoryItem.CreatedBy = currentUserId;
+                        db.Entry(inventoryItem).State = EntityState.Modified;
+                    }
+
                     db.SaveChanges();
                     return RedirectToAction("Index");
                 }
             }
 
-            ViewBag.ItemId = new SelectList(db.ItemMasters, "Id", "ItemName", inventoryItem.ItemId);
+            ViewBag.ItemId = new SelectList(db.ItemMasters, "ItemId", "ItemName", inventoryItem.ItemId);
             return View(inventoryItem);
         }
 
@@ -242,6 +340,29 @@ namespace NGO_Project.Controllers
             db.InventoryItems.Remove(inventoryItem);
             db.SaveChanges();
             return RedirectToAction("Index");
+        }
+
+        [HttpPost]
+        public JsonResult UpdateQualityStatus(int id, bool? status)
+        {
+            var item = db.InventoryItems.Find(id);
+            if (item == null)
+            {
+                return Json(new { success = false, message = "Record not found." });
+            }
+
+            try
+            {
+                item.QualityCheckStatus = status;
+                item.LastUpdated = DateTime.Now;
+                db.Entry(item).State = EntityState.Modified;
+                db.SaveChanges();
+                return Json(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Error: " + ex.Message });
+            }
         }
 
         [HttpPost]
@@ -312,7 +433,7 @@ namespace NGO_Project.Controllers
         public ActionResult GetItemDetails(int itemId)
         {
             var itemDetails = db.ItemMasters
-                                .Where(i => i.Id == itemId)
+                                .Where(i => i.ItemId == itemId)
                                 .Select(i => new
                                 {
                                     CategoryName = i.Category.CategoryName,
@@ -374,7 +495,7 @@ namespace NGO_Project.Controllers
         {
             var items = db.ItemMasters
                 .Where(x => x.CategoryId == categoryId)
-                .Select(x => new { Id = x.Id, ItemName = x.ItemName })
+                .Select(x => new { Id = x.ItemId, ItemName = x.ItemName })
                 .ToList();
 
             return Json(items, JsonRequestBehavior.AllowGet);

@@ -9,7 +9,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Donation Invoice - @Model.FullName</title>
+    <title>Donation Invoice - @(Model.User?.FirstName + " " + Model.User?.LastName)</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <style>
@@ -241,17 +241,17 @@
             <div class="invoice-meta">
                 <h2>INVOICE</h2>
                 <p>Date: @(Model.CreatedDate.HasValue ? Model.CreatedDate.Value.ToString("MMM dd, yyyy") : DateTime.Now.ToString("MMM dd, yyyy"))</p>
-                <p>Receipt #: INV-@Model.DonorId.ToString("D5")</p>
+                <p>Receipt #: @(ViewBag.SpecificDonationId != null ? "DN-" + ViewBag.SpecificDonationId.ToString("D5") : "INV-" + Model.Donorid.ToString("D5"))</p>
             </div>
         </div>
 
         <div class="info-grid">
             <div class="info-block">
                 <h3>Donor Details</h3>
-                <div class="name">@Model.FullName</div>
+                <div class="name">@(Model.User?.FirstName + " " + Model.User?.LastName)</div>
                 <div class="details">
-                    Email: @Model.Email<br>
-                    Phone: @Model.PhoneNumber<br>
+                    Email: @(Model.User?.Email ?? "N/A")<br>
+                    Phone: @(Model.User?.PhoneNumber ?? "N/A")<br>
                     Status: Verified Contributor
                 </div>
             </div>
@@ -276,9 +276,16 @@
                 </tr>
             </thead>
             <tbody>
-                @if (Model.Donations != null && Model.Donations.Any())
+                @{
+                    var donations = ViewBag.Donations as List<NGO_Project.Donation>;
+                }
+                @if (donations != null && donations.Any())
                 {
-                    foreach (var donation in Model.Donations)
+                    var donationsToDisplay = ViewBag.SpecificDonationId != null 
+                        ? donations.Where(d => d.DonationId == (int)ViewBag.SpecificDonationId)
+                        : donations;
+
+                    foreach (var donation in donationsToDisplay)
                     {
                         foreach (var item in donation.DonationItems)
                         {
@@ -290,15 +297,6 @@
                             </tr>
                         }
                     }
-                }
-                else if (Model.InventoryItem != null)
-                {
-                    <tr>
-                        <td class="item-name">@Model.InventoryItem.ItemMaster.ItemName</td>
-                        <td>@Model.InventoryItem.Quantity</td>
-                        <td>@Model.InventoryItem.ItemMaster.Unit</td>
-                        <td style="text-align: right;">@(Model.CreatedDate.HasValue ? Model.CreatedDate.Value.ToString("MMM dd, yyyy") : "-")</td>
-                    </tr>
                 }
                 else
                 {

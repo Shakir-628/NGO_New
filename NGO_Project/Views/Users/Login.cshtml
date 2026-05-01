@@ -228,7 +228,7 @@
                 <div class="form-group">
                     <label>Password</label>
                     <div class="input-group">
-                        @Html.PasswordFor(m => m.Password, new { @class = "form-control", id = "donorPassword", placeholder = "••••••••", autocomplete = "current-password" })
+                        @Html.PasswordFor(m => m.PasswordHash, new { @class = "form-control", id = "donorPassword", placeholder = "••••••••", autocomplete = "current-password" })
                         <div class="input-group-append">
                             <span class="input-group-text" id="toggleDonorPassword" style="cursor: pointer;">
                                 <i class="fa fa-eye" id="donorEyeIcon"></i>

@@ -4,7 +4,7 @@
 {
     foreach (var item in Model)
     {
-        <tr data-id="@item.Id">
+        <tr data-id="@item.InventoryId">
             <td>@(item.ItemMaster != null && !string.IsNullOrEmpty(item.ItemMaster.ItemName) ? item.ItemMaster.ItemName : "N/A")</td>
             <td>
                 @{
@@ -20,29 +20,56 @@
             <td>@Html.DisplayFor(modelItem => item.Quantity)</td>
             <td>@Html.DisplayFor(modelItem => item.ItemMaster.Unit)</td>
             @{
-                string statusClass = "badge-success";
-                string iconClass = "fa-check-circle";
-                string statusText = "Available";
+                string stockClass = "badge-success";
+                string stockIcon = "fa-check-circle";
+                string stockText = "Available";
 
                 if (item.Quantity <= 5 && item.Quantity > 0)
                 {
-                    statusClass = "badge-warning";
-                    iconClass = "fa-exclamation-triangle";
-                    statusText = "Low Stock";
+                    stockClass = "badge-warning";
+                    stockIcon = "fa-exclamation-triangle";
+                    stockText = "Low Stock";
                 }
                 else if (item.Quantity == 0)
                 {
-                    statusClass = "badge-danger";
-                    iconClass = "fa-circle-xmark";
-                    statusText = "Out of Stock";
+                    stockClass = "badge-danger";
+                    stockIcon = "fa-circle-xmark";
+                    stockText = "Out of Stock";
+                }
+
+                // Quality Status logic
+                string qualityClass = "bg-light text-dark";
+                string qualityText = "Pending";
+                if (item.QualityCheckStatus == true)
+                {
+                    qualityClass = "bg-success text-white";
+                    qualityText = "Approved";
+                }
+                else if (item.QualityCheckStatus == false)
+                {
+                    qualityClass = "bg-danger text-white";
+                    qualityText = "Rejected";
                 }
             }
-            <td><span class="badge @statusClass"><i class="fas @iconClass"></i> @statusText</span></td>
+            <td>
+                <div class="d-flex flex-column gap-1">
+                    <span class="badge @stockClass" style="font-size: 0.7rem;"><i class="fas @stockIcon"></i> @stockText</span>
+                    <span class="badge @qualityClass" style="font-size: 0.7rem;">@qualityText</span>
+                </div>
+            </td>
             <td>@Html.DisplayFor(modelItem => item.LastUpdated)</td>
             <td class="text-nowrap">
-                <button class="btn btn-sm btn-outline-danger deleteInvBtn" title="Delete">
-                    <i class="fas fa-trash"></i>
-                </button>
+                <div class="btn-group">
+                    <button class="btn btn-sm btn-success approveBtn" title="Approve" data-id="@item.InventoryId">
+                        <i class="fas fa-check"></i>
+                    </button>
+                    <button class="btn btn-sm btn-danger rejectBtn" title="Reject" data-id="@item.InventoryId">
+                        <i class="fas fa-times"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger deleteInvBtn" title="Delete" data-id="@item.InventoryId">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
             </td>
         </tr>
     }

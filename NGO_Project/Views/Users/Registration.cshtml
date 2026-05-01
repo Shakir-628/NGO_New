@@ -260,13 +260,13 @@
                 <div class="col-md-6 mb-4">
                     <label class="form-label">Password</label>
                     <div class="input-group">
-                        @Html.PasswordFor(m => m.Password, new { @class = "form-control", id = "registerPassword", placeholder = "••••••••", required = "required", maxlength = "20", minlength = "8", autocomplete = "off" })
+                        @Html.PasswordFor(m => m.PasswordHash, new { @class = "form-control", id = "registerPassword", placeholder = "••••••••", required = "required", maxlength = "20", minlength = "8", autocomplete = "off" })
                         <span class="input-group-text" id="toggleRegisterPassword" style="cursor:pointer;">
                             <i id="registerEyeIcon" class="fa fa-eye"></i>
                         </span>
                     </div>
                     <small id="passwordStrength" class="form-text mt-1 d-block" style="font-size: 0.75rem;"></small>
-                    @Html.ValidationMessageFor(m => m.Password, "", new { @class = "text-danger" })
+                    @Html.ValidationMessageFor(m => m.PasswordHash, "", new { @class = "text-danger" })
                 </div>
 
                 <div class="col-md-6 mb-4">

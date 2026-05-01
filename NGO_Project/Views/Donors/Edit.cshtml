@@ -19,33 +19,34 @@
                         
                         <div class="form-horizontal">
                             @Html.ValidationSummary(true, "", new { @class = "text-danger" })
-                            @Html.HiddenFor(model => model.DonorId)
-                            @Html.HiddenFor(model => model.NGOId)
+                            @Html.HiddenFor(model => model.Donorid)
+                            @Html.HiddenFor(model => model.DonorUserId)
+                            @Html.HiddenFor(model => model.NGOUserId)
                             @Html.HiddenFor(model => model.CreatedDate)
 
                             <div class="row mb-4">
-                                <div class="col-md-6">
-                                    <label class="form-label fw-bold">Full Name</label>
-                                    @Html.EditorFor(model => model.FullName, new { htmlAttributes = new { @class = "form-control" } })
-                                    @Html.ValidationMessageFor(model => model.FullName, "", new { @class = "text-danger" })
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold">First Name</label>
+                                    @Html.EditorFor(model => model.User.FirstName, new { htmlAttributes = new { @class = "form-control" } })
+                                    @Html.ValidationMessageFor(model => model.User.FirstName, "", new { @class = "text-danger" })
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold">Last Name</label>
+                                    @Html.EditorFor(model => model.User.LastName, new { htmlAttributes = new { @class = "form-control" } })
+                                    @Html.ValidationMessageFor(model => model.User.LastName, "", new { @class = "text-danger" })
+                                </div>
+                                <div class="col-md-4">
                                     <label class="form-label fw-bold">Email Address</label>
-                                    @Html.EditorFor(model => model.Email, new { htmlAttributes = new { @class = "form-control" } })
-                                    @Html.ValidationMessageFor(model => model.Email, "", new { @class = "text-danger" })
+                                    @Html.EditorFor(model => model.User.Email, new { htmlAttributes = new { @class = "form-control" } })
+                                    @Html.ValidationMessageFor(model => model.User.Email, "", new { @class = "text-danger" })
                                 </div>
                             </div>
 
                             <div class="row mb-4">
                                 <div class="col-md-6">
                                     <label class="form-label fw-bold">Phone Number</label>
-                                    @Html.EditorFor(model => model.PhoneNumber, new { htmlAttributes = new { @class = "form-control" } })
-                                    @Html.ValidationMessageFor(model => model.PhoneNumber, "", new { @class = "text-danger" })
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-bold">Assigned Item</label>
-                                    @Html.DropDownList("InventoryItemId", null, "--- Select Assigned Item ---", htmlAttributes: new { @class = "form-control" })
-                                    @Html.ValidationMessageFor(model => model.InventoryItemId, "", new { @class = "text-danger" })
+                                    @Html.EditorFor(model => model.User.PhoneNumber, new { htmlAttributes = new { @class = "form-control" } })
+                                    @Html.ValidationMessageFor(model => model.User.PhoneNumber, "", new { @class = "text-danger" })
                                 </div>
                             </div>
 

@@ -20,10 +20,14 @@ namespace NGO_Project.Controllers
             int currentNGOId = Convert.ToInt32(Session["UserId"]);
 
             var donorDetails = db.Donors
-                .Include(d => d.InventoryItem.ItemMaster)
-                .Where(d => d.NGOId == currentNGOId)
+                .Include(d => d.User)
+                .Include(d => d.Donations.Select(dn => dn.DonationItems.Select(di => di.ItemMaster)))
+                .Where(d => d.NGOUserId == currentNGOId)
                 .OrderByDescending(d => d.CreatedDate)
                 .ToList();
+
+            // Note: Donations will need to be fetched separately in the view or via a ViewModel if needed.
+            // For now, just ensuring it doesn't crash.
 
             return View(donorDetails);
         }
@@ -44,109 +48,144 @@ namespace NGO_Project.Controllers
         }
 
         // GET: Donors/Invoice/5
-        public ActionResult Invoice(int? id)
+        public ActionResult Invoice(int? id, int? donationId)
         {
             if (id == null) return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
 
             var donor = db.Donors
-                .Include(d => d.Donations.Select(dn => dn.DonationItems.Select(di => di.ItemMaster)))
-                .Include(d => d.InventoryItem.ItemMaster)
-                .FirstOrDefault(d => d.DonorId == id);
+                .Include(d => d.User)
+                .FirstOrDefault(d => d.Donorid == id);
 
             if (donor == null) return HttpNotFound();
 
+            // Fetch donations separately since navigation property is missing
+            var donations = db.Donations
+                .Include(dn => dn.DonationItems.Select(di => di.ItemMaster))
+                .Where(dn => dn.DonorId == donor.Donorid)
+                .ToList();
+
+            ViewBag.Donations = donations;
+            ViewBag.SpecificDonationId = donationId;
             return View(donor);
         }
 
         // GET: Donors/Create
         public ActionResult Create()
         {
-            ViewBag.InventoryItemId = new SelectList(db.InventoryItems.Select(i => new { Id = i.Id, Name = i.ItemMaster.ItemName }), "Id", "Name");
+            ViewBag.InventoryItemId = new SelectList(db.InventoryItems.Select(i => new { Id = i.InventoryId, Name = i.ItemMaster.ItemName }), "Id", "Name");
             return View();
         }
 
         // POST: Donors/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create([Bind(Include = "DonorId,FullName,Email,PhoneNumber,InventoryItemId")] Donor donor)
+        public ActionResult Create([Bind(Include = "Donorid,DonorUserId,NGOUserId,CreatedDate")] Donor donor)
         {
             if (ModelState.IsValid)
             {
-                donor.NGOId = Convert.ToInt32(Session["UserId"]);
+                donor.NGOUserId = Convert.ToInt32(Session["UserId"]);
                 donor.CreatedDate = DateTime.Now;
                 db.Donors.Add(donor);
                 db.SaveChanges();
                 return RedirectToAction("Index");
             }
 
-            ViewBag.InventoryItemId = new SelectList(db.InventoryItems.Select(i => new { Id = i.Id, Name = i.ItemMaster.ItemName }), "Id", "Name", donor.InventoryItemId);
+            ViewBag.InventoryItemId = new SelectList(db.InventoryItems.Select(i => new { Id = i.InventoryId, Name = i.ItemMaster.ItemName }), "Id", "Name");
             return View(donor);
         }
 
         [HttpPost]
-        public JsonResult SaveDonor(Donor model)
+        public JsonResult SaveDonor(Donor model, List<int> inventoryItemIds, string FullName, string Email, string PhoneNumber)
         {
-            if (ModelState.IsValid)
+            try
             {
-                // 1. Find or Create Donor (Upsert)
-                var donor = db.Donors.FirstOrDefault(d => d.Email == model.Email);
+                // 1. Identify or Create the User (The "Donor" in Users table)
+                var donorUser = db.Users.FirstOrDefault(u => u.Email == Email && u.Email != "");
+                
+                if (donorUser == null)
+                {
+                    // Create new user for this donor
+                    var names = (FullName ?? "Anonymous").Split(new[] { ' ' }, 2);
+                    var firstName = names[0];
+                    var lastName = names.Length > 1 ? names[1] : "-";
+                    
+                    var donorTypeId = db.UserTypes.FirstOrDefault(t => t.Type == "Donor")?.TypeId;
+                    
+                    donorUser = new User
+                    {
+                        FirstName = firstName,
+                        LastName = lastName,
+                        Email = Email,
+                        PhoneNumber = PhoneNumber,
+                        Username = Email ?? ("donor_" + Guid.NewGuid().ToString().Substring(0, 8)),
+                        Type = donorTypeId,
+                        Created_Date = DateTime.Now,
+                        Updated_Date = DateTime.Now
+                    };
+                    
+                    db.Users.Add(donorUser);
+                    db.SaveChanges(); // Get UserId
+                }
+
+                // 2. Create Donor Record (linked to User)
+                var donor = db.Donors.FirstOrDefault(d => d.DonorUserId == donorUser.UserId);
                 if (donor == null)
                 {
-                    // If new donor, save into CRM (DB)
-                    donor = model;
-                    if (donor.NGOId == 0 && Session["UserId"] != null)
+                    donor = new Donor
                     {
-                        donor.NGOId = Convert.ToInt32(Session["UserId"]);
-                    }
-                    donor.CreatedDate = DateTime.Now;
+                        Donorid = donorUser.UserId,
+                        DonorUserId = donorUser.UserId,
+                        NGOUserId = Convert.ToInt32(Session["UserId"]),
+                        CreatedDate = DateTime.Now
+                    };
                     db.Donors.Add(donor);
                     db.SaveChanges();
                 }
-                else
+
+                // 3. Create Donation History Record
+                var itemIdsToProcess = inventoryItemIds ?? new List<int>();
+                Donation donation = null;
+                
+                if (itemIdsToProcess.Any())
                 {
-                    // Existing donor: Update info if changed
-                    donor.FullName = model.FullName;
-                    donor.PhoneNumber = model.PhoneNumber;
-                    donor.InventoryItemId = model.InventoryItemId; // Update primary link
-                    db.Entry(donor).State = EntityState.Modified;
+                    donation = new Donation
+                    {
+                        DonorId = donor.Donorid,
+                        UserId = Convert.ToInt32(Session["UserId"]), // Recorded by current NGO user
+                        DonationDate = DateTime.Now,
+                        Status = "Completed",
+                        Notes = "Batch Donation"
+                    };
+                    db.Donations.Add(donation);
+                    db.SaveChanges();
+
+                    foreach (var itemId in itemIdsToProcess)
+                    {
+                        var inventoryRecord = db.InventoryItems.Include(i => i.ItemMaster)
+                                                .FirstOrDefault(i => i.InventoryId == itemId);
+                        
+                        if (inventoryRecord != null)
+                        {
+                            var donationItem = new DonationItem
+                            {
+                                DonationId = donation.DonationId,
+                                ItemId = inventoryRecord.ItemId,
+                                Quantity = Convert.ToDecimal(inventoryRecord.Quantity),
+                                Unit = inventoryRecord.ItemMaster?.Unit ?? "pcs",
+                                CreationDate = DateTime.Now
+                            };
+                            db.DonationItems.Add(donationItem);
+                        }
+                    }
                     db.SaveChanges();
                 }
 
-                // 2. Create Donation History Record (to allow multiple items tracking)
-                if (model.InventoryItemId.HasValue && model.InventoryItemId.Value > 0)
-                {
-                    var inventoryRecord = db.InventoryItems.Include(i => i.ItemMaster)
-                                            .FirstOrDefault(i => i.Id == model.InventoryItemId.Value);
-                    
-                    if (inventoryRecord != null)
-                    {
-                        var donation = new Donation
-                        {
-                            DonorId = donor.DonorId,
-                            UserId = Convert.ToInt32(Session["UserId"]),
-                            DonationDate = DateTime.Now,
-                            Status = "Completed",
-                            Notes = "Added via Inventory Workflow"
-                        };
-                        db.Donations.Add(donation);
-                        db.SaveChanges();
-
-                        var donationItem = new DonationItem
-                        {
-                            DonationId = donation.DonationId,
-                            ItemId = inventoryRecord.ItemId,
-                            Quantity = inventoryRecord.Quantity,
-                            Unit = inventoryRecord.ItemMaster?.Unit ?? "pcs",
-                            CreationDate = DateTime.Now
-                        };
-                        db.DonationItems.Add(donationItem);
-                        db.SaveChanges();
-                    }
-                }
-
-                return Json(new { success = true, donorId = donor.DonorId });
+                return Json(new { success = true, donorId = donor.Donorid, donationId = donation?.DonationId });
             }
-            return Json(new { success = false, message = "Invalid data." });
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Error: " + ex.Message + (ex.InnerException != null ? " Inner: " + ex.InnerException.Message : "") });
+            }
         }
 
         [HttpGet]
@@ -194,22 +233,29 @@ namespace NGO_Project.Controllers
             {
                 return HttpNotFound();
             }
-            ViewBag.InventoryItemId = new SelectList(db.InventoryItems.Select(i => new { Id = i.Id, Name = i.ItemMaster.ItemName }), "Id", "Name", donor.InventoryItemId);
+            ViewBag.InventoryItemId = new SelectList(db.InventoryItems.Select(i => new { Id = i.InventoryId, Name = i.ItemMaster.ItemName }), "Id", "Name");
             return View(donor);
         }
 
         // POST: Donors/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit([Bind(Include = "DonorId,NGOId,FullName,Email,PhoneNumber,InventoryItemId,CreatedDate")] Donor donor)
+        public ActionResult Edit(Donor donor)
         {
             if (ModelState.IsValid)
             {
                 db.Entry(donor).State = EntityState.Modified;
+                
+                // Also save User details if provided
+                if (donor.User != null)
+                {
+                    db.Entry(donor.User).State = EntityState.Modified;
+                }
+                
                 db.SaveChanges();
                 return RedirectToAction("Index");
             }
-            ViewBag.InventoryItemId = new SelectList(db.InventoryItems.Select(i => new { Id = i.Id, Name = i.ItemMaster.ItemName }), "Id", "Name", donor.InventoryItemId);
+            ViewBag.InventoryItemId = new SelectList(db.InventoryItems.Select(i => new { Id = i.InventoryId, Name = i.ItemMaster.ItemName }), "Id", "Name");
             return View(donor);
         }
 
@@ -242,45 +288,53 @@ namespace NGO_Project.Controllers
         [HttpGet]
         public JsonResult GetDonatedItems(int id)
         {
-            var detailedItems = db.DonationItems
-                .Where(di => di.Donation.DonorId == id)
-                .Select(di => new
+            // Fetch donations grouped by their transaction session
+            var donations = db.Donations
+                .Where(d => d.DonorId == id)
+                .OrderByDescending(d => d.DonationDate)
+                .Select(d => new
                 {
-                    ItemName = di.ItemMaster.ItemName,
-                    Quantity = di.Quantity,
-                    Unit = di.Unit,
-                    Date = di.CreationDate
+                    DonationId = d.DonationId,
+                    Date = d.DonationDate,
+                    Items = d.DonationItems.Select(di => new
+                    {
+                        ItemName = di.ItemMaster.ItemName,
+                        Quantity = di.Quantity,
+                        Unit = di.Unit
+                    }).ToList()
                 }).ToList()
-                .Select(di => new {
-                    di.ItemName,
-                    di.Quantity,
-                    di.Unit,
-                    Date = di.Date.HasValue ? di.Date.Value.ToString("MMM dd, yyyy") : "N/A"
+                .Select(d => new {
+                    d.DonationId,
+                    Date = d.Date.HasValue ? d.Date.Value.ToString("MMM dd, yyyy hh:mm tt") : "N/A",
+                    d.Items
                 }).ToList();
 
-            if (detailedItems.Count > 0)
+            if (donations.Count > 0)
             {
-                return Json(new { success = true, items = detailedItems, type = "detailed" }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = true, donations = donations, type = "grouped" }, JsonRequestBehavior.AllowGet);
             }
 
-            // Fallback to Donor summary item
-            var donor = db.Donors.Include(d => d.InventoryItem.ItemMaster).FirstOrDefault(d => d.DonorId == id);
-            if (donor != null && donor.InventoryItem?.ItemMaster != null)
+            // Fallback for legacy data (Check first donation item if grouped not found)
+            var donor = db.Donors.Include(d => d.User).FirstOrDefault(d => d.Donorid == id);
+            var firstDonation = db.Donations.Include(dn => dn.DonationItems.Select(di => di.ItemMaster))
+                                   .FirstOrDefault(dn => dn.DonorId == id);
+            var firstItem = firstDonation?.DonationItems.FirstOrDefault();
+            if (donor != null && firstItem != null)
             {
                 return Json(new 
                 { 
                     success = true, 
                     summary = new {
-                        ItemName = donor.InventoryItem.ItemMaster.ItemName,
-                        Quantity = donor.InventoryItem.Quantity,
-                        Unit = donor.InventoryItem.ItemMaster.Unit,
+                        ItemName = firstItem.ItemMaster.ItemName,
+                        Quantity = firstItem.Quantity,
+                        Unit = firstItem.Unit,
                         Date = donor.CreatedDate.HasValue ? donor.CreatedDate.Value.ToString("MMM dd, yyyy") : "N/A"
                     }, 
                     type = "summary" 
                 }, JsonRequestBehavior.AllowGet);
             }
 
-            return Json(new { success = true, items = new List<object>(), type = "none" }, JsonRequestBehavior.AllowGet);
+            return Json(new { success = true, donations = new List<object>(), type = "none" }, JsonRequestBehavior.AllowGet);
         }
 
         protected override void Dispose(bool disposing)

@@ -363,7 +363,7 @@
 
         <form id="addItemForm">
             @Html.AntiForgeryToken()
-            <input type="hidden" name="NewItem.Id" id="inventoryItemId" value="0" />
+            <input type="hidden" name="NewItem.InventoryId" id="inventoryItemId" value="0" />
             <div class="form-fields-grid">
                 <div class="form-group">
                     <label>Item <span class="text-danger">*</span></label>
@@ -391,14 +391,41 @@
             </div>
             <br />
             <div class="mt-4 pt-3 border-top d-flex gap-3">
-                <button type="submit" id="saveInventoryItemBtn" class="btn-theme btn-primary-theme">
-                    <i class="fas fa-save me-1"></i> Save Item to Inventory
+                <button type="button" id="addToBasketBtn" class="btn-theme btn-primary-theme">
+                    <i class="fas fa-cart-plus me-1"></i> Add to Basket
                 </button>
                 <button type="button" id="cancelAddItemFormBtn" class="btn-theme btn-secondary-theme">
                     Cancel
                 </button>
             </div>
         </form>
+
+        <!-- Basket Table -->
+        <div id="basketContainer" class="mt-5" style="display: none;">
+            <h3 class="mb-3 fs-5 fw-bold text-dark"><i class="fas fa-shopping-basket me-2 text-success"></i> Current Donation Basket</h3>
+            <div class="table-responsive">
+                <table class="inventory-table w-100" id="basketTable">
+                    <thead>
+                        <tr>
+                            <th>Item Name</th>
+                            <th>Quantity</th>
+                            <th>Unit</th>
+                            <th>Expiry</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Basket items will appear here -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="mt-4 d-flex justify-content-end">
+                <button type="button" id="finalizeDonationBtn" class="btn-theme btn-success-theme" style="min-width: 250px;">
+                    <i class="fas fa-check-circle me-1"></i> Finalize & Assign Donor
+                </button>
+            </div>
+        </div>
+    </div>
     </div>
 
     <!-- Current Inventory Table -->
@@ -566,7 +593,7 @@
                                 var categories = (List<NGO_Project.Category>)ViewBag.CategoriesList;
                                 foreach (var item in ViewBag.ItemMastersList as List<NGO_Project.ItemMaster>)
                                 {
-                                    <tr data-id="@item.Id">
+                                    <tr data-id="@item.ItemId">
                                         <td class="fw-bold">@item.ItemName</td>
                                         <td>@(item.CategoryId != null && categories != null ? categories.FirstOrDefault(c => c.CategoryId == item.CategoryId)?.CategoryName : "N/A")</td>
                                         <td>@item.Unit</td>
@@ -627,6 +654,8 @@
 
     <script>
         var inventoryTable;
+        var donationBasket = []; // Store items locally before DB save
+        var currentSessionItems = []; // Store IDs of items after DB save
 
         $(document).ready(function () {
             // --- Modal Openers (Top Priority) ---
@@ -674,82 +703,123 @@
                 $("#addItemForm")[0].reset();
                 $("#inventoryItemId").val("0");
                 $("#displayCategory").val("");
+                donationBasket = []; // Clear local basket
+                renderBasket();
+                currentSessionItems = []; // Reset batch on cancel
             });
 
-            // --- Add Item Submit ---
-            $("#addItemForm").submit(function (e) {
-                e.preventDefault();
+            // --- Basket Management ---
+            $("#addToBasketBtn").on("click", function () {
+                var itemId = $("#itemid").val();
+                var itemName = $("#itemid option:selected").text();
+                var quantity = $("input[name='NewItem.Quantity']").val();
+                var unit = $("#Unit").val();
+                var expiry = $("input[name='NewItem.ExpirationDate']").val();
 
-                var form = $(this);
+                if (!itemId || !quantity || quantity <= 0) {
+                    swal("Error", "Please select an item and enter a valid quantity.", "error");
+                    return;
+                }
 
-                $.ajax({
-                    url: "/InventoryItems/Create",
-                    type: "POST",
-                    data: form.serialize(),
-                    success: function (response) {
-                        if (response.success) {
-                            var isEdit = $("#inventoryItemId").val() > 0;
-                            $("#addItemFormContainer").hide();
-                            form[0].reset();
-                            $("#inventoryItemId").val("0");
-                            $("#displayCategory").val("");
+                // Add to local array
+                donationBasket.push({
+                    ItemId: parseInt(itemId),
+                    ItemName: itemName,
+                    Quantity: parseFloat(quantity),
+                    Unit: unit,
+                    ExpirationDate: expiry
+                });
 
-                            // Step 1: Success message
-                            swal(isEdit ? "Item Updated Successfully!" : "Item Added Successfully!", "", "success").then(() => {
-                                if (!isEdit) {
-                                    // Step 2: Ask for next action only if it was an Add (not edit)
-                                    swal({
-                                        title: "Next Step",
-                                        text: "Would you like to print invoice?",
-                                        icon: "info",
-                                        buttons: {
-                                            cancel: { text: "Cancel", value: "cancel", visible: false },
-                                            invoice: { text: "Print Invoice", value: "invoice", className: "btn-success" }
-                                        }
-                                    }).then((value) => {
-                                        if (value === "invoice") {
-                                            $("#InventoryItemId").val(response.itemId);
-                                            $("#DonatedCategory").val(response.categoryName);
-                                            $("#DonatedItem").val(response.categoryName);
-                                            $("#donorModalBg").show();
-                                        } else if (value === "anonymous") {
-                                            swal("Marked as Anonymous Donation", "", "info");
-                                        }
+                // Reset specific fields
+                $("input[name='NewItem.Quantity']").val("");
+                $("#itemid").val("").trigger('change');
+                $("#displayCategory").val("");
+                $("#Unit").val("");
+
+                renderBasket();
+                swal("Added to Basket", itemName + " has been added to your current session.", "success");
+            });
+
+            function renderBasket() {
+                var tbody = $("#basketTable tbody");
+                tbody.empty();
+
+                if (donationBasket.length === 0) {
+                    $("#basketContainer").hide();
+                    return;
+                }
+
+                $("#basketContainer").show();
+
+                donationBasket.forEach(function (item, index) {
+                    var row = `<tr>
+                        <td class="fw-bold">${item.ItemName}</td>
+                        <td><span class="badge bg-info text-dark">${item.Quantity}</span></td>
+                        <td>${item.Unit || '-'}</td>
+                        <td>${item.ExpirationDate || 'N/A'}</td>
+                        <td>
+                            <button type="button" class="btn btn-sm btn-outline-danger removeBasketItem" data-index="${index}">
+                                <i class="fas fa-times"></i> Remove
+                            </button>
+                        </td>
+                    </tr>`;
+                    tbody.append(row);
+                });
+            }
+
+            $(document).on("click", ".removeBasketItem", function () {
+                var index = $(this).data("index");
+                donationBasket.splice(index, 1);
+                renderBasket();
+            });
+
+            // --- Finalize Batch Save ---
+            $("#finalizeDonationBtn").on("click", function () {
+                if (donationBasket.length === 0) return;
+
+                swal({
+                    title: "Ready to Save?",
+                    text: "You are about to save " + donationBasket.length + " items to inventory. Continue?",
+                    icon: "info",
+                    buttons: ["Review More", "Yes, Save All"]
+                }).then((willSave) => {
+                    if (willSave) {
+                        $.ajax({
+                            url: "/InventoryItems/CreateBatch",
+                            type: "POST",
+                            contentType: "application/json",
+                            data: JSON.stringify({ items: donationBasket }),
+                            success: function (response) {
+                                if (response.success) {
+                                    currentSessionItems = response.itemIds;
+                                    donationBasket = []; // Clear basket
+                                    renderBasket();
+                                    $("#addItemFormContainer").hide();
+
+                                    // Refresh inventory table
+                                    $.get("/InventoryItems/GetInventoryItems", function (data) {
+                                        $("#inventoryTableBody").html(data);
+                                        updateStats();
                                     });
+
+                                    // Proceed to donor info
+                                    $("#InventoryItemId").val(response.itemIds[0]); 
+                                    $("#DonatedCategory").val(response.categoryName);
+                                    $("#DonatedItem").val(response.categoryName + (currentSessionItems.length > 1 ? " (+ " + (currentSessionItems.length-1) + " more)" : ""));
+                                    $("#donorModalBg").css("display", "flex");
+                                } else {
+                                    swal("Error", response.message || "Failed to save batch.", "error");
                                 }
-                            });
-
-                            // Refresh inventory table
-                            $.get("/InventoryItems/GetInventoryItems", function (data) {
-                                $("#inventoryTableBody").html(data);
-
-                                if ($.fn.DataTable.isDataTable("#mainInventoryTable")) {
-                                    inventoryTable.destroy();
-                                }
-                                inventoryTable = $("#mainInventoryTable").DataTable({
-                                    pageLength: 10,
-                                    lengthMenu: [10, 20, 50],
-                                    searching: true,
-                                    ordering: true,
-                                    responsive: true
-                                });
-                            });
-
-                            // Refresh summary
-                            $.get("/InventoryItems/GetSummaryData", function (data) {
-                                $("#totalItems").text(data.total);
-                                $("#availableItems").text(data.available);
-                                $("#lowStockItems").text(data.lowStock);
-                            });
-
-                        } else {
-                            swal("Error!", response.errors || "An error occurred.", "error");
-                        }
-                    },
-                    error: function () {
-                        swal("Error!", "Something went wrong.", "error");
+                            }
+                        });
                     }
                 });
+            }); 
+            
+            // --- Form Submission Redirect ---
+            $("#addItemForm").submit(function (e) {
+                e.preventDefault();
+                $("#addToBasketBtn").click(); // Redirect form submission to basket logic
             });
 
             // --- Category Modal Form ---
@@ -800,15 +870,24 @@
             $("#donorForm").submit(function (e) {
                 e.preventDefault();
 
+                var formData = $(this).serializeArray();
+                // Add the batch of inventory items to the form data
+                currentSessionItems.forEach(function(id) {
+                    formData.push({ name: 'inventoryItemIds', value: id });
+                });
+
                 $.ajax({
                     url: "/Donors/SaveDonor",
                     type: "POST",
-                    data: $(this).serialize(),
+                    data: $.param(formData),
                     success: function (res) {
                         if (res.success) {
                             $("#donorModalBg").hide();
-                            // Open the invoice in a new tab
-                            window.open("/Donors/Invoice/" + res.donorId, "_blank");
+                            currentSessionItems = []; // Clear batch on success
+                            // Open the invoice in a new tab with specific donation ID
+                            var invoiceUrl = "/Donors/Invoice/" + res.donorId;
+                            if (res.donationId) invoiceUrl += "?donationId=" + res.donationId;
+                            window.open(invoiceUrl, "_blank");
                             // Redirect to donors list
                             window.location.href = "/Donors/Index";
                         } else {
@@ -962,6 +1041,38 @@
 
 
 
+            // --- Approve / Reject Inventory Item ---
+            $(document).on("click", ".approveBtn", function () {
+                var id = $(this).data("id");
+                updateQualityStatus(id, true);
+            });
+
+            $(document).on("click", ".rejectBtn", function () {
+                var id = $(this).data("id");
+                updateQualityStatus(id, false);
+            });
+
+            function updateQualityStatus(id, status) {
+                $.ajax({
+                    url: "/InventoryItems/UpdateQualityStatus",
+                    type: "POST",
+                    data: { id: id, status: status },
+                    success: function (res) {
+                        if (res.success) {
+                            // Refresh inventory table rows
+                            $.get("/InventoryItems/GetInventoryItems", function (data) {
+                                $("#inventoryTableBody").html(data);
+                            });
+                        } else {
+                            swal("Error", res.message || "Failed to update status.", "error");
+                        }
+                    },
+                    error: function () {
+                        swal("Error", "Something went wrong.", "error");
+                    }
+                });
+            }
+
             // --- Delete Main Inventory Item ---
             $(document).on("click", ".deleteInvBtn", function () {
                 var row = $(this).closest("tr");
@@ -1003,7 +1114,7 @@
                     data: { id: id },
                     success: function (item) {
                         if (item) {
-                            $("#inventoryItemId").val(item.Id);
+                            $("#inventoryItemId").val(item.InventoryId);
                             $("#itemid").val(item.ItemId);
                             $("#Unit").val(item.Unit);
                             $("#displayCategory").val(item.CategoryName);

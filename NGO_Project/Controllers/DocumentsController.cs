@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Entity;
@@ -25,8 +25,8 @@ namespace NGO_Project.Controllers
         public ActionResult GenerateInvoice(int id)
         {
             var item = db.InventoryItems
-                         .Include("Category")
-                         .FirstOrDefault(i => i.Id == id);
+                         .Include(i => i.ItemMaster.Category)
+                         .FirstOrDefault(i => i.InventoryId == id);
 
             if (item == null) return HttpNotFound();
 

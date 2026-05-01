@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Entity;
@@ -41,7 +41,7 @@ namespace NGO_Project.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Create(
                 [Bind(Include = "RequestId,UserId,RequestTitle,Description,CategoryId,UrgencyLevel,Location")] AidRequest aidRequest,
-                [Bind(Include = "ItemName,Quantity,Unit,ItemRequestCount")] RequestedItem requestedItem
+                [Bind(Include = "ItemId,Quantity,Unit")] RequestedItem requestedItem
  )
         {
 
@@ -49,7 +49,7 @@ namespace NGO_Project.Controllers
             aidRequest.PostDate = DateTime.Now;
             aidRequest.IsActive = true;
             aidRequest.UserId = Convert.ToInt16(Session["UserId"]);
-            aidRequest.IsPosted = 1;
+            aidRequest.IsPosted = true;
             db.AidRequests.Add(aidRequest);
             db.SaveChanges(); // This will generate RequestId
 
@@ -57,13 +57,10 @@ namespace NGO_Project.Controllers
             requestedItem.RequestId = aidRequest.RequestId; // FK link
 
             // (Optional defaults to avoid nulls if form doesn’t send data)
-            if (string.IsNullOrWhiteSpace(requestedItem.ItemName))
-                requestedItem.ItemName = aidRequest.RequestTitle;
             if (requestedItem.Quantity <= 0)
                 requestedItem.Quantity = 1;
             if (string.IsNullOrWhiteSpace(requestedItem.Unit))
                 requestedItem.Unit = "pcs";
-            requestedItem.ItemRequestCount = 1; // Default value
 
             db.RequestedItems.Add(requestedItem);
             db.SaveChanges();

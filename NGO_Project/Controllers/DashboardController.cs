@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
@@ -45,7 +45,7 @@ namespace NGO_Project.Controllers
 
             var aidRequestsWithUsers = (from ar in db.AidRequests
                                         join u in db.Users on ar.UserId equals u.UserId
-                                        where  ar.IsPosted == 1
+                                        where  ar.IsPosted == true
                                         orderby ar.PostDate descending
                                         select new
                                         {

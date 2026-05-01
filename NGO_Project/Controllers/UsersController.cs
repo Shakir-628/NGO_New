@@ -34,7 +34,7 @@ namespace NGO_Project.Controllers
         {
             ViewBag.UserTypelist = new SelectList(db.UserTypes, "TypeId", "Type");
 
-            if (string.IsNullOrWhiteSpace(user.Username) || string.IsNullOrWhiteSpace(user.Password))
+            if (string.IsNullOrWhiteSpace(user.Username) || string.IsNullOrWhiteSpace(user.PasswordHash))
             {
                 ModelState.AddModelError("Missinguser", "Username and Password are required.");
                 return View();
@@ -44,7 +44,7 @@ namespace NGO_Project.Controllers
                 ModelState.AddModelError("Username", "Username is required.");
                 return View();
             }
-            if (string.IsNullOrWhiteSpace(user.Password))
+            if (string.IsNullOrWhiteSpace(user.PasswordHash))
             {
                 ModelState.AddModelError("Password", "Password is required.");
                 return View();
@@ -62,10 +62,10 @@ namespace NGO_Project.Controllers
                 return View();
             }
 
-            var encryptedPassword = Encryption.Encrypt(user.Password);
+            var encryptedPassword = Encryption.Encrypt(user.PasswordHash);
             var existingUser = db.Users.FirstOrDefault(x =>
                 x.Username == user.Username &&
-                x.Password == encryptedPassword &&
+                x.PasswordHash == encryptedPassword &&
                 x.Type == userType.TypeId
             );
 
@@ -142,7 +142,7 @@ namespace NGO_Project.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Registration([Bind(Include = "Title,FirstName,LastName,Username,Email,PhoneNumber,Address,City,CNIC,Type,Password")] User user)
+        public ActionResult Registration([Bind(Include = "Title,FirstName,LastName,Username,Email,PhoneNumber,Address,City,CNIC,Type,PasswordHash")] User user)
         {
             ViewBag.UserTypelist = new SelectList(db.UserTypes, "TypeId", "Type", user.Type);
 
@@ -157,7 +157,7 @@ namespace NGO_Project.Controllers
             if (!ModelState.IsValid)
                 return View(user);
 
-            user.Password = Encryption.Encrypt(user.Password);
+            user.PasswordHash = Encryption.Encrypt(user.PasswordHash);
             user.Created_Date = DateTime.Now;
             user.Updated_Date = DateTime.Now;
 
@@ -216,7 +216,7 @@ namespace NGO_Project.Controllers
         // POST: Users/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit([Bind(Include = "UserId,Title,FirstName,LastName,Username,Email,PhoneNumber,Address,City,CNIC,Type,Password,Created_Date,Updated_Date")] User user)
+        public ActionResult Edit([Bind(Include = "UserId,Title,FirstName,LastName,Username,Email,PhoneNumber,Address,City,CNIC,Type,PasswordHash,Created_Date,Updated_Date")] User user)
         {
             if (!ModelState.IsValid)
             {
@@ -224,7 +224,7 @@ namespace NGO_Project.Controllers
                 return View(user);
             }
 
-            user.Password = Encryption.Encrypt(user.Password);
+            user.PasswordHash = Encryption.Encrypt(user.PasswordHash);
             user.Updated_Date = DateTime.Now;
             db.Entry(user).State = EntityState.Modified;
             db.SaveChanges();

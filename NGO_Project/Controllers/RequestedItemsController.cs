@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Entity;
@@ -51,7 +51,7 @@ namespace NGO_Project.Controllers
         // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create([Bind(Include = "RequestedItemId,RequestId,ItemName,Quantity,Unit")] RequestedItem requestedItem)
+        public ActionResult Create([Bind(Include = "RequestedItemId,RequestId,ItemId,Quantity,Unit")] RequestedItem requestedItem)
         {
             if (ModelState.IsValid)
             {
@@ -87,7 +87,7 @@ namespace NGO_Project.Controllers
         // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit([Bind(Include = "RequestedItemId,RequestId,ItemName,Quantity,Unit")] RequestedItem requestedItem)
+        public ActionResult Edit([Bind(Include = "RequestedItemId,RequestId,ItemId,Quantity,Unit")] RequestedItem requestedItem)
         {
             if (ModelState.IsValid)
             {
@@ -139,20 +139,8 @@ namespace NGO_Project.Controllers
                     return Json(new { success = false, message = "Aid request not found." });
 
                 // Update IsPosted first
-                airRequest.IsPosted = 1;
+                airRequest.IsPosted = true;
                 db.Entry(airRequest).State = EntityState.Modified;
-                db.SaveChanges();
-
-                // Update itemRequest count
-                if (itemRequest.ItemRequestCount == 0 || itemRequest.ItemRequestCount == null)
-                {
-                    itemRequest.ItemRequestCount = 1;
-                }
-                else
-                {
-                    itemRequest.ItemRequestCount += 1;
-                }
-                db.Entry(itemRequest).State = EntityState.Modified;
                 db.SaveChanges();
 
                 return Json(new { success = true, message = "Updated successfully." });

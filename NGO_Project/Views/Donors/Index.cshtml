@@ -288,8 +288,24 @@
 
 <div class="tab-content">
     <div class="page-header mt-4">
-        <h1><i class="fas fa-hand-holding-heart me-2" style="color: var(--primary);"></i>Donor Database</h1>
-        <p class="text-secondary">View and manage all contributors to your organization.</p>
+        <h1><i class="fas fa-hand-holding-heart me-2" style="color: var(--primary);"></i>Donor CRM</h1>
+        <p class="text-secondary">Track your contributors and their donation history.</p>
+    </div>
+
+    <!-- CRM Stats -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+        <div class="content-section" style="padding: 1.5rem; text-align: center; margin-bottom: 0;">
+            <div style="font-size: 0.8rem; font-weight: 600; color: #6b7280; text-transform: uppercase;">Total Donors</div>
+            <div style="font-size: 2rem; font-weight: 700; color: var(--primary);">@Model.Select(d => d.User?.Email).Distinct().Count()</div>
+        </div>
+        <div class="content-section" style="padding: 1.5rem; text-align: center; margin-bottom: 0;">
+            <div style="font-size: 0.8rem; font-weight: 600; color: #6b7280; text-transform: uppercase;">Recent Contributions</div>
+            <div style="font-size: 2rem; font-weight: 700; color: var(--secondary);">@Model.SelectMany(d => d.Donations).Count(dn => dn.DonationDate > DateTime.Now.AddDays(-30))</div>
+        </div>
+        <div class="content-section" style="padding: 1.5rem; text-align: center; margin-bottom: 0;">
+            <div style="font-size: 0.8rem; font-weight: 600; color: #6b7280; text-transform: uppercase;">Anonymous Donors</div>
+            <div style="font-size: 2rem; font-weight: 700; color: var(--accent);">@Model.Count(d => d.User?.FirstName == "Anonymous")</div>
+        </div>
     </div>
 
     <div class="content-section">
@@ -303,7 +319,7 @@
                 <thead>
                     <tr>
                         <th>Donor Details</th>
-                        <th>Donor Type</th>
+                        <th>Donated Item</th>
                         <th>Last Activity</th>
                         <th>Action</th>
                     </tr>
@@ -311,27 +327,45 @@
                 <tbody>
                     @foreach (var donor in Model)
                     {
+                        var lastDonation = donor.Donations.OrderByDescending(d => d.DonationDate).FirstOrDefault();
+                        var firstItem = lastDonation?.DonationItems.FirstOrDefault();
+                        
                         <tr>
                             <td>
-                                <div class="donor-name">@donor.FullName</div>
+                                <div class="donor-name">@(donor.User?.FirstName + " " + donor.User?.LastName)</div>
                                 <div class="contact-info">
-                                    <span><i class="fas fa-envelope me-1"></i> @donor.Email</span>
-                                    <span><i class="fas fa-phone me-1"></i> @donor.PhoneNumber</span>
+                                    <span><i class="fas fa-envelope me-1"></i> @(donor.User?.Email ?? "N/A")</span>
+                                    <span><i class="fas fa-phone me-1"></i> @(donor.User?.PhoneNumber ?? "N/A")</span>
                                 </div>
                             </td>
                             <td>
-                                <span class="badge-type">Individual</span>
+                                @if (firstItem != null)
+                                {
+                                    <div class="fw-bold text-primary">
+                                        <i class="fas fa-box-open me-1"></i> 
+                                        @(firstItem.ItemMaster?.ItemName ?? "Item")
+                                    </div>
+                                    <div class="text-secondary small">
+                                        Qty: @(firstItem.Quantity) @(firstItem.Unit ?? "")
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="text-secondary small italic">
+                                        <i class="fas fa-info-circle me-1"></i> No items yet
+                                    </div>
+                                }
                             </td>
                             <td style="color: #64748b;">
-                                @(donor.CreatedDate.HasValue ? donor.CreatedDate.Value.ToString("MMM dd, yyyy") : "N/A")
+                                @(donor.CreatedDate.HasValue ? donor.CreatedDate.Value.ToString("MMM dd, yyyy hh:mm tt") : "N/A")
                             </td>
                             <td>
                                 <button class="btn-action btn-view viewItemsBtn" 
-                                        data-id="@donor.DonorId"
-                                        data-name="@donor.FullName">
+                                        data-id="@donor.Donorid"
+                                        data-name="@(donor.User?.FirstName + " " + donor.User?.LastName)">
                                     <i class="fas fa-eye"></i> Details
                                 </button>
-                                <a href="/Donors/Invoice/@donor.DonorId" target="_blank" class="btn-action" style="background: #ecfdf5; color: #059669; text-decoration: none;">
+                                <a href="/Donors/Invoice/@donor.Donorid" target="_blank" class="btn-action" style="background: #ecfdf5; color: #059669; text-decoration: none;">
                                     <i class="fas fa-file-invoice"></i> Invoice
                                 </a>
                             </td>
@@ -389,32 +423,31 @@
                     data: { id: donorId },
                     success: function (res) {
                         var html = "";
-                        if (res.type === "detailed" && res.items.length > 0) {
-                            html += '<table class="details-table">' +
-                                    '<thead>' +
-                                        '<tr>' +
-                                            '<th>Item Name</th>' +
-                                            '<th>Quantity</th>' +
-                                            '<th>Unit</th>' +
-                                            '<th>Date</th>' +
-                                        '</tr>' +
-                                    '</thead>' +
-                                    '<tbody>';
-                            
-                            res.items.forEach(function(item) {
-                                html += '<tr>' +
-                                            '<td class="item-name-cell">' + item.ItemName + '</td>' +
-                                            '<td><span class="qty-badge">' + (item.Quantity || 0) + '</span></td>' +
-                                            '<td>' + (item.Unit || "-") + '</td>' +
-                                            '<td style="color:#647280; font-size:0.85rem;">' + item.Date + '</td>' +
-                                        '</tr>';
+                        if (res.type === "grouped" && res.donations.length > 0) {
+                            res.donations.forEach(function(don) {
+                                html += '<div class="donation-group mb-4" style="border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden;">' +
+                                        '<div style="background: #f8fafc; padding: 10px 15px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">' +
+                                            '<span style="font-weight: 600; color: #475569;"><i class="fas fa-calendar-alt me-2 text-primary"></i>' + don.Date + '</span>' +
+                                            '<a href="/Donors/Invoice/' + donorId + '?donationId=' + don.DonationId + '" target="_blank" class="btn btn-sm btn-success" style="font-size: 0.75rem;"><i class="fas fa-print me-1"></i> Invoice</a>' +
+                                        '</div>' +
+                                        '<table class="details-table">' +
+                                            '<thead><tr><th>Item</th><th>Qty</th><th>Unit</th></tr></thead>' +
+                                            '<tbody>';
+                                
+                                don.Items.forEach(function(item) {
+                                    html += '<tr>' +
+                                                '<td class="item-name-cell">' + item.ItemName + '</td>' +
+                                                '<td><span class="qty-badge">' + (item.Quantity || 0) + '</span></td>' +
+                                                '<td>' + (item.Unit || "-") + '</td>' +
+                                            '</tr>';
+                                });
+
+                                html += '</tbody></table></div>';
                             });
-                            
-                            html += '</tbody></table>';
                         } else if (res.type === "summary" && res.summary) {
                             html = '<div style="padding: 1.5rem;">' +
                                    '<div style="color: #64748b; font-size: 0.85rem; margin-bottom: 1rem; font-weight: 500;">' +
-                                   '<i class="fas fa-history me-1"></i> Primary Donation Item:</div>';
+                                   '<i class="fas fa-history me-1"></i> Legacy Donation Record:</div>';
                             
                             html += '<table class="details-table">' +
                                     '<thead><tr><th>Item Name</th><th>Quantity</th><th>Unit</th><th>Date</th></tr></thead>' +
