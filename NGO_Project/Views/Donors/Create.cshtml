@@ -1,4 +1,4 @@
-@model NGO_Project.Donor
+@model NGO_Project.User
 
 @{
     ViewBag.Title = "Create";
@@ -21,10 +21,15 @@
                             @Html.ValidationSummary(true, "", new { @class = "text-danger" })
 
                             <div class="row mb-4">
-                                <div class="col-md-6">
-                                    <label class="form-label fw-bold">Full Name</label>
-                                    @Html.EditorFor(model => model.FullName, new { htmlAttributes = new { @class = "form-control", placeholder = "Enter donor's full name" } })
-                                    @Html.ValidationMessageFor(model => model.FullName, "", new { @class = "text-danger" })
+                                <div class="col-md-3">
+                                    <label class="form-label fw-bold">First Name</label>
+                                    @Html.EditorFor(model => model.FirstName, new { htmlAttributes = new { @class = "form-control", placeholder = "First Name" } })
+                                    @Html.ValidationMessageFor(model => model.FirstName, "", new { @class = "text-danger" })
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label fw-bold">Last Name</label>
+                                    @Html.EditorFor(model => model.LastName, new { htmlAttributes = new { @class = "form-control", placeholder = "Last Name" } })
+                                    @Html.ValidationMessageFor(model => model.LastName, "", new { @class = "text-danger" })
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label fw-bold">Email Address</label>

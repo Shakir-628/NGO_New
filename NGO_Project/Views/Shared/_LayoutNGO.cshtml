@@ -367,9 +367,10 @@
             }
             <div class="tabs">
                 @*<a class="tab @(currentController == "RequestedItems" && currentAction == "Index" ? "active" : "")" href="~/RequestedItems/Index">Overview</a>
-                    <a class="tab @(currentController == "AidRequests" && currentAction == "Index" ? "active" : "")" href="~/AidRequests/Index">Aid Feed</a>*@
+        <a class="tab @(currentController == "AidRequests" && currentAction == "Index" ? "active" : "")" href="~/AidRequests/Index">Aid Feed</a>*@
                 <a class="tab @(currentController == "InventoryItems" && currentAction == "Index" ? "active" : "")" href="~/InventoryItems/Index">Inventory</a>
-                <a class="tab @(currentController == "Donors" && currentAction == "Index" ? "active" : "")" href="~/Donors/Index">CRM</a>
+                <a class="tab @(currentController == "Donations" && currentAction == "Index" ? "active" : "")" href="~/Donations/Index">Procurement Orders</a>
+                <a class="tab @(currentController == "Donations" && currentAction == "Index" ? "active" : "")" href="~/Donors/Index">Invoices</a>
                 @*<a class="tab @(currentController == "DistributionOrders" && currentAction == "Index" ? "active" : "")" href="~/DistributionOrders/Index">Disbursement Item</a>*@
             </div>
         </div>

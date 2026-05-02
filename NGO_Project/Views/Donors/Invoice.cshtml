@@ -1,4 +1,4 @@
-@model NGO_Project.Donor
+@model NGO_Project.User
 
 @{
     Layout = null; // Clean page for printing
@@ -9,7 +9,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Donation Invoice - @(Model.User?.FirstName + " " + Model.User?.LastName)</title>
+    <title>Donation Invoice - @(Model.FirstName + " " + Model.LastName)</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <style>
@@ -240,18 +240,18 @@
             </div>
             <div class="invoice-meta">
                 <h2>INVOICE</h2>
-                <p>Date: @(Model.CreatedDate.HasValue ? Model.CreatedDate.Value.ToString("MMM dd, yyyy") : DateTime.Now.ToString("MMM dd, yyyy"))</p>
-                <p>Receipt #: @(ViewBag.SpecificDonationId != null ? "DN-" + ViewBag.SpecificDonationId.ToString("D5") : "INV-" + Model.Donorid.ToString("D5"))</p>
+                <p>Date: @(Model.Created_Date.HasValue ? Model.Created_Date.Value.ToString("MMM dd, yyyy") : DateTime.Now.ToString("MMM dd, yyyy"))</p>
+                <p>Receipt #: @(ViewBag.SpecificDonationId != null ? "DN-" + ViewBag.SpecificDonationId.ToString("D5") : "INV-" + Model.UserId.ToString("D5"))</p>
             </div>
         </div>
 
         <div class="info-grid">
             <div class="info-block">
                 <h3>Donor Details</h3>
-                <div class="name">@(Model.User?.FirstName + " " + Model.User?.LastName)</div>
+                <div class="name">@(Model.FirstName + " " + Model.LastName)</div>
                 <div class="details">
-                    Email: @(Model.User?.Email ?? "N/A")<br>
-                    Phone: @(Model.User?.PhoneNumber ?? "N/A")<br>
+                    Email: @(Model.Email ?? "N/A")<br>
+                    Phone: @(Model.PhoneNumber ?? "N/A")<br>
                     Status: Verified Contributor
                 </div>
             </div>

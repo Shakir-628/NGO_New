@@ -6,7 +6,7 @@ using System.Linq;
 using System.Net;
 using System.Web;
 using System.Web.Mvc;
-using NGO_Project;
+using NGO_Project.Models;
 
 namespace NGO_Project.Controllers
 {
@@ -19,17 +19,29 @@ namespace NGO_Project.Controllers
         {
             int currentNGOId = Convert.ToInt32(Session["UserId"]);
 
-            var donorDetails = db.Donors
-                .Include(d => d.User)
-                .Include(d => d.Donations.Select(dn => dn.DonationItems.Select(di => di.ItemMaster)))
-                .Where(d => d.NGOUserId == currentNGOId)
-                .OrderByDescending(d => d.CreatedDate)
-                .ToList();
+            var donationEntries = (from d in db.Donations
+                                   join u in db.Users on d.DonorId equals u.UserId
+                                   where d.UserId == currentNGOId
+                                   orderby d.DonationDate descending
+                                   select new DonorCRMViewModel
+                                   {
+                                       DonationId = d.DonationId,
+                                       DonorId = d.DonorId,
+                                       DonationDate = d.DonationDate,
+                                       Status = d.Status,
+                                       Notes = d.Notes,
+                                       DonorName = u.FirstName + " " + u.LastName,
+                                       DonorEmail = u.Email,
+                                       DonorPhone = u.PhoneNumber,
+                                       Items = d.DonationItems.Select(di => new DonationItemViewModel
+                                       {
+                                           ItemName = di.ItemMaster.ItemName,
+                                           Quantity = di.Quantity,
+                                           Unit = di.Unit
+                                       }).ToList()
+                                   }).ToList();
 
-            // Note: Donations will need to be fetched separately in the view or via a ViewModel if needed.
-            // For now, just ensuring it doesn't crash.
-
-            return View(donorDetails);
+            return View(donationEntries);
         }
 
         // GET: Donors/Details/5
@@ -39,7 +51,7 @@ namespace NGO_Project.Controllers
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            Donor donor = db.Donors.Find(id);
+            User donor = db.Users.Find(id);
             if (donor == null)
             {
                 return HttpNotFound();
@@ -52,16 +64,15 @@ namespace NGO_Project.Controllers
         {
             if (id == null) return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
 
-            var donor = db.Donors
-                .Include(d => d.User)
-                .FirstOrDefault(d => d.Donorid == id);
+            var donor = db.Users
+                .FirstOrDefault(u => u.UserId == id);
 
             if (donor == null) return HttpNotFound();
 
-            // Fetch donations separately since navigation property is missing
+            // Fetch donations for this user (donor)
             var donations = db.Donations
                 .Include(dn => dn.DonationItems.Select(di => di.ItemMaster))
-                .Where(dn => dn.DonorId == donor.Donorid)
+                .Where(dn => dn.DonorId == donor.UserId)
                 .ToList();
 
             ViewBag.Donations = donations;
@@ -79,13 +90,13 @@ namespace NGO_Project.Controllers
         // POST: Donors/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create([Bind(Include = "Donorid,DonorUserId,NGOUserId,CreatedDate")] Donor donor)
+        public ActionResult Create([Bind(Include = "UserId,FirstName,LastName,Email,PhoneNumber,Type")] User donor)
         {
             if (ModelState.IsValid)
             {
-                donor.NGOUserId = Convert.ToInt32(Session["UserId"]);
-                donor.CreatedDate = DateTime.Now;
-                db.Donors.Add(donor);
+                donor.Created_Date = DateTime.Now;
+                donor.Updated_Date = DateTime.Now;
+                db.Users.Add(donor);
                 db.SaveChanges();
                 return RedirectToAction("Index");
             }
@@ -95,7 +106,7 @@ namespace NGO_Project.Controllers
         }
 
         [HttpPost]
-        public JsonResult SaveDonor(Donor model, List<int> inventoryItemIds, string FullName, string Email, string PhoneNumber)
+        public JsonResult SaveDonor(User model, List<int> inventoryItemIds, string FullName, string Email, string PhoneNumber)
         {
             try
             {
@@ -127,20 +138,8 @@ namespace NGO_Project.Controllers
                     db.SaveChanges(); // Get UserId
                 }
 
-                // 2. Create Donor Record (linked to User)
-                var donor = db.Donors.FirstOrDefault(d => d.DonorUserId == donorUser.UserId);
-                if (donor == null)
-                {
-                    donor = new Donor
-                    {
-                        Donorid = donorUser.UserId,
-                        DonorUserId = donorUser.UserId,
-                        NGOUserId = Convert.ToInt32(Session["UserId"]),
-                        CreatedDate = DateTime.Now
-                    };
-                    db.Donors.Add(donor);
-                    db.SaveChanges();
-                }
+                // 2. We now use donorUser.UserId directly as DonorId in the Donation record.
+                // No separate Donor record is needed as per the new schema.
 
                 // 3. Create Donation History Record
                 var itemIdsToProcess = inventoryItemIds ?? new List<int>();
@@ -150,7 +149,7 @@ namespace NGO_Project.Controllers
                 {
                     donation = new Donation
                     {
-                        DonorId = donor.Donorid,
+                        DonorId = donorUser.UserId,
                         UserId = Convert.ToInt32(Session["UserId"]), // Recorded by current NGO user
                         DonationDate = DateTime.Now,
                         Status = "Completed",
@@ -180,7 +179,7 @@ namespace NGO_Project.Controllers
                     db.SaveChanges();
                 }
 
-                return Json(new { success = true, donorId = donor.Donorid, donationId = donation?.DonationId });
+                return Json(new { success = true, donorId = donorUser.UserId, donationId = donation?.DonationId });
             }
             catch (Exception ex)
             {
@@ -228,7 +227,7 @@ namespace NGO_Project.Controllers
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            Donor donor = db.Donors.Find(id);
+            User donor = db.Users.Find(id);
             if (donor == null)
             {
                 return HttpNotFound();
@@ -240,18 +239,11 @@ namespace NGO_Project.Controllers
         // POST: Donors/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit(Donor donor)
+        public ActionResult Edit(User donor)
         {
             if (ModelState.IsValid)
             {
                 db.Entry(donor).State = EntityState.Modified;
-                
-                // Also save User details if provided
-                if (donor.User != null)
-                {
-                    db.Entry(donor.User).State = EntityState.Modified;
-                }
-                
                 db.SaveChanges();
                 return RedirectToAction("Index");
             }
@@ -266,7 +258,7 @@ namespace NGO_Project.Controllers
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            Donor donor = db.Donors.Find(id);
+            User donor = db.Users.Find(id);
             if (donor == null)
             {
                 return HttpNotFound();
@@ -279,18 +271,26 @@ namespace NGO_Project.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult DeleteConfirmed(int id)
         {
-            Donor donor = db.Donors.Find(id);
-            db.Donors.Remove(donor);
+            User donor = db.Users.Find(id);
+            db.Users.Remove(donor);
             db.SaveChanges();
             return RedirectToAction("Index");
         }
 
         [HttpGet]
-        public JsonResult GetDonatedItems(int id)
+        public JsonResult GetDonatedItems(int id, int? donationId = null)
         {
-            // Fetch donations grouped by their transaction session
-            var donations = db.Donations
-                .Where(d => d.DonorId == id)
+            // Fetch donations for this donor
+            var donationsQuery = db.Donations
+                .Where(d => d.DonorId == id);
+
+            // If a specific donationId is provided, filter for only that record
+            if (donationId.HasValue)
+            {
+                donationsQuery = donationsQuery.Where(d => d.DonationId == donationId.Value);
+            }
+
+            var donations = donationsQuery
                 .OrderByDescending(d => d.DonationDate)
                 .Select(d => new
                 {
@@ -315,7 +315,7 @@ namespace NGO_Project.Controllers
             }
 
             // Fallback for legacy data (Check first donation item if grouped not found)
-            var donor = db.Donors.Include(d => d.User).FirstOrDefault(d => d.Donorid == id);
+            var donor = db.Users.FirstOrDefault(u => u.UserId == id);
             var firstDonation = db.Donations.Include(dn => dn.DonationItems.Select(di => di.ItemMaster))
                                    .FirstOrDefault(dn => dn.DonorId == id);
             var firstItem = firstDonation?.DonationItems.FirstOrDefault();
@@ -328,7 +328,7 @@ namespace NGO_Project.Controllers
                         ItemName = firstItem.ItemMaster.ItemName,
                         Quantity = firstItem.Quantity,
                         Unit = firstItem.Unit,
-                        Date = donor.CreatedDate.HasValue ? donor.CreatedDate.Value.ToString("MMM dd, yyyy") : "N/A"
+                        Date = donor.Created_Date.HasValue ? donor.Created_Date.Value.ToString("MMM dd, yyyy") : "N/A"
                     }, 
                     type = "summary" 
                 }, JsonRequestBehavior.AllowGet);

@@ -43,30 +43,30 @@ namespace NGO_Project.Controllers
             };
 
             ViewBag.CategoriesList = db.Categories
-                 .Where(x => x.CategoryName != null)
+                 .Where(x => x.CategoryName != null && x.CreatedBy == currentUserId)
                  .OrderBy(c => c.CategoryName)
                  .ToList();
 
 
             // Populate dropdowns
             ViewBag.Units = new SelectList(
-                db.Categories.Where(x => x.CategoryName != null)
+                db.Categories.Where(x => x.CategoryName != null && x.CreatedBy == currentUserId)
                              .Select(c => c.Unit)
                              .Distinct()
                              .ToList()
             );
 
             ViewBag.ItemMasters = new SelectList(
-                db.ItemMasters.OrderBy(x => x.ItemName),
+                db.ItemMasters.Where(x=>x.CreatedBy == currentUserId).OrderBy(x => x.ItemName),
                 "ItemId", "ItemName"
             );
 
-            ViewBag.ItemMastersList = db.ItemMasters
+            ViewBag.ItemMastersList = db.ItemMasters.Where(x=> x.CreatedBy == currentUserId)
                 .OrderBy(x => x.ItemName)
                 .ToList();
 
             ViewBag.Categories = new SelectList(
-                db.Categories.Where(x => x.CategoryName != null),
+                db.Categories.Where(x => x.CategoryName != null && x.CreatedBy == currentUserId),
                 "CategoryId", "CategoryName"
             );
 
@@ -157,7 +157,7 @@ namespace NGO_Project.Controllers
                                          .FirstOrDefault();
 
                     ViewBag.CategoriesList = db.Categories
-                         .Where(x => x.CategoryName != null)
+                         .Where(x => x.CategoryName != null && x.CreatedBy == currentUserId)
                          .OrderBy(c => c.CategoryName)
                          .ToList();
 
@@ -387,25 +387,26 @@ namespace NGO_Project.Controllers
         }
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult CreateCategory([Bind(Include = "CategoryName, Unit")] Category viewModel)
+        public ActionResult CreateCategory([Bind(Include = "CategoryName, Unit, CreatedBy")] Category viewModel)
         {
             if (ModelState.IsValid)
             {
+                var currentUserId = Convert.ToInt32(Session["UserId"]);
                 if (Session["UserId"] != null && !string.IsNullOrEmpty(Session["UserId"].ToString()))
                 {
                     var existingCategories = db.Categories.FirstOrDefault(x =>
-                        x.CategoryName == viewModel.CategoryName);
-
+                        x.CategoryName == viewModel.CategoryName && x.CreatedBy == currentUserId);
+                    viewModel.CreatedBy = currentUserId;
                     if (existingCategories == null)
                     {
                         db.Categories.Add(viewModel);
                         db.SaveChanges();
                         // pass units as distinct list from Category table
-                        ViewBag.Units = new SelectList(db.Categories.Where(x => x.CategoryName != null)
+                        ViewBag.Units = new SelectList(db.Categories.Where(x => x.CategoryName != null && x.CreatedBy == currentUserId)
                                                        .Select(c => c.Unit)
                                                        .Distinct()
                                                        .ToList());
-                        ViewBag.Categories = new SelectList(db.Categories.Where(x => x.CategoryName != null), "CategoryId", "CategoryName");
+                        ViewBag.Categories = new SelectList(db.Categories.Where(x => x.CategoryName != null && x.CreatedBy == currentUserId), "CategoryId", "CategoryName");
                         return Json(new { success = true, message = "Category created successfully!" });
                     }
                     else

@@ -39,7 +39,7 @@ namespace NGO_Project.Controllers
         // GET: Donations/Create
         public ActionResult Create()
         {
-            ViewBag.DonorId = new SelectList(db.Donors, "UserId", "FullName");
+            ViewBag.DonorId = new SelectList(db.Users.Where(x => x.Type == 2), "UserId", "FullName");
             ViewBag.UserId = new SelectList(db.Users, "UserId", "FirstName");
             ViewBag.DonationId = new SelectList(db.Users, "UserId", "FirstName");
             return View();
@@ -59,7 +59,7 @@ namespace NGO_Project.Controllers
                 return RedirectToAction("Index");
             }
 
-            ViewBag.DonorId = new SelectList(db.Donors, "UserId", "FullName", donation.DonorId);
+            ViewBag.DonorId = new SelectList(db.Users.Where(x => x.Type == 2), "UserId", "FullName", donation.DonorId);
             ViewBag.UserId = new SelectList(db.Users, "UserId", "FirstName", donation.UserId);
             ViewBag.DonationId = new SelectList(db.Users, "UserId", "FirstName", donation.DonationId);
             return View(donation);
@@ -77,7 +77,7 @@ namespace NGO_Project.Controllers
             {
                 return HttpNotFound();
             }
-            ViewBag.DonorId = new SelectList(db.Donors, "UserId", "FullName", donation.DonorId);
+            ViewBag.DonorId = new SelectList(db.Users.Where(x => x.Type == 2), "UserId", "FullName", donation.DonorId);
             ViewBag.UserId = new SelectList(db.Users, "UserId", "FirstName", donation.UserId);
             ViewBag.DonationId = new SelectList(db.Users, "UserId", "FirstName", donation.DonationId);
             return View(donation);
@@ -96,7 +96,7 @@ namespace NGO_Project.Controllers
                 db.SaveChanges();
                 return RedirectToAction("Index");
             }
-            ViewBag.DonorId = new SelectList(db.Donors, "UserId", "FullName", donation.DonorId);
+            ViewBag.DonorId = new SelectList(db.Users.Where(x => x.Type == 2), "UserId", "FullName", donation.DonorId);
             ViewBag.UserId = new SelectList(db.Users, "UserId", "FirstName", donation.UserId);
             ViewBag.DonationId = new SelectList(db.Users, "UserId", "FirstName", donation.DonationId);
             return View(donation);

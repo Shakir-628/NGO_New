@@ -1,4 +1,4 @@
-@model List<NGO_Project.Donor>
+@model List<NGO_Project.Models.DonorCRMViewModel>
 
 @{
     Layout = "~/Views/Shared/_LayoutNGO.cshtml";
@@ -296,15 +296,15 @@
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
         <div class="content-section" style="padding: 1.5rem; text-align: center; margin-bottom: 0;">
             <div style="font-size: 0.8rem; font-weight: 600; color: #6b7280; text-transform: uppercase;">Total Donors</div>
-            <div style="font-size: 2rem; font-weight: 700; color: var(--primary);">@Model.Select(d => d.User?.Email).Distinct().Count()</div>
+            <div style="font-size: 2rem; font-weight: 700; color: var(--primary);">@Model.Select(d => d.DonorEmail).Distinct().Count()</div>
         </div>
         <div class="content-section" style="padding: 1.5rem; text-align: center; margin-bottom: 0;">
             <div style="font-size: 0.8rem; font-weight: 600; color: #6b7280; text-transform: uppercase;">Recent Contributions</div>
-            <div style="font-size: 2rem; font-weight: 700; color: var(--secondary);">@Model.SelectMany(d => d.Donations).Count(dn => dn.DonationDate > DateTime.Now.AddDays(-30))</div>
+            <div style="font-size: 2rem; font-weight: 700; color: var(--secondary);">@Model.Count(dn => dn.DonationDate > DateTime.Now.AddDays(-30))</div>
         </div>
         <div class="content-section" style="padding: 1.5rem; text-align: center; margin-bottom: 0;">
             <div style="font-size: 0.8rem; font-weight: 600; color: #6b7280; text-transform: uppercase;">Anonymous Donors</div>
-            <div style="font-size: 2rem; font-weight: 700; color: var(--accent);">@Model.Count(d => d.User?.FirstName == "Anonymous")</div>
+            <div style="font-size: 2rem; font-weight: 700; color: var(--accent);">@Model.Count(d => d.DonorName.Contains("Anonymous"))</div>
         </div>
     </div>
 
@@ -325,17 +325,16 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var donor in Model)
+                    @foreach (var donation in Model)
                     {
-                        var lastDonation = donor.Donations.OrderByDescending(d => d.DonationDate).FirstOrDefault();
-                        var firstItem = lastDonation?.DonationItems.FirstOrDefault();
+                        var firstItem = donation.Items.FirstOrDefault();
                         
                         <tr>
                             <td>
-                                <div class="donor-name">@(donor.User?.FirstName + " " + donor.User?.LastName)</div>
+                                <div class="donor-name">@donation.DonorName</div>
                                 <div class="contact-info">
-                                    <span><i class="fas fa-envelope me-1"></i> @(donor.User?.Email ?? "N/A")</span>
-                                    <span><i class="fas fa-phone me-1"></i> @(donor.User?.PhoneNumber ?? "N/A")</span>
+                                    <span><i class="fas fa-envelope me-1"></i> @(donation.DonorEmail ?? "N/A")</span>
+                                    <span><i class="fas fa-phone me-1"></i> @(donation.DonorPhone ?? "N/A")</span>
                                 </div>
                             </td>
                             <td>
@@ -343,7 +342,11 @@
                                 {
                                     <div class="fw-bold text-primary">
                                         <i class="fas fa-box-open me-1"></i> 
-                                        @(firstItem.ItemMaster?.ItemName ?? "Item")
+                                        @firstItem.ItemName
+                                        @if (donation.Items.Count > 1)
+                                        {
+                                            <span class="badge bg-light text-primary border ms-1">+( @(donation.Items.Count - 1) )</span>
+                                        }
                                     </div>
                                     <div class="text-secondary small">
                                         Qty: @(firstItem.Quantity) @(firstItem.Unit ?? "")
@@ -352,20 +355,21 @@
                                 else
                                 {
                                     <div class="text-secondary small italic">
-                                        <i class="fas fa-info-circle me-1"></i> No items yet
+                                        <i class="fas fa-info-circle me-1"></i> No items
                                     </div>
                                 }
                             </td>
                             <td style="color: #64748b;">
-                                @(donor.CreatedDate.HasValue ? donor.CreatedDate.Value.ToString("MMM dd, yyyy hh:mm tt") : "N/A")
+                                @(donation.DonationDate.HasValue ? donation.DonationDate.Value.ToString("MMM dd, yyyy hh:mm tt") : "N/A")
                             </td>
                             <td>
                                 <button class="btn-action btn-view viewItemsBtn" 
-                                        data-id="@donor.Donorid"
-                                        data-name="@(donor.User?.FirstName + " " + donor.User?.LastName)">
+                                        data-id="@donation.DonorId"
+                                        data-donationid="@donation.DonationId"
+                                        data-name="@donation.DonorName">
                                     <i class="fas fa-eye"></i> Details
                                 </button>
-                                <a href="/Donors/Invoice/@donor.Donorid" target="_blank" class="btn-action" style="background: #ecfdf5; color: #059669; text-decoration: none;">
+                                <a href="/Donors/Invoice/@donation.DonorId?donationId=@donation.DonationId" target="_blank" class="btn-action" style="background: #ecfdf5; color: #059669; text-decoration: none;">
                                     <i class="fas fa-file-invoice"></i> Invoice
                                 </a>
                             </td>
@@ -410,17 +414,18 @@
             // Open modal
             $(".viewItemsBtn").on("click", function () {
                 var donorId = $(this).data("id");
+                var donationId = $(this).data("donationid");
                 var name = $(this).data("name");
-
+                
                 $("#modalDonorName").text(name + "'s Donations");
-                $("#modalInvoiceBtn").attr("href", "/Donors/Invoice/" + donorId);
+                $("#modalInvoiceBtn").attr("href", "/Donors/Invoice/" + donorId + "?donationId=" + donationId);
                 $("#itemsList").html('<div class="empty-state"><i class="fas fa-spinner fa-spin me-2"></i> Loading details...</div>');
                 $("#itemsModal").css("display", "flex");
 
                 $.ajax({
                     url: '/Donors/GetDonatedItems',
                     type: 'GET',
-                    data: { id: donorId },
+                    data: { id: donorId, donationId: donationId },
                     success: function (res) {
                         var html = "";
                         if (res.type === "grouped" && res.donations.length > 0) {
